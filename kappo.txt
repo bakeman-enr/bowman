@@ -5010,6 +5010,633 @@ int main() {
 	return 0;
 }
 
+/*
+** Id: //Department/DaVinci/BRANCHES/MT6620_WIFI_DRIVER_V2_3/include/mgmt/rlm_domain.h#1
+*/
+
+/*! \file   "rlm_domain.h"
+    \brief
+*/
+
+/*
+** Log: rlm_domain.h
+ *
+ * 09 29 2011 cm.chang
+ * NULL
+ * Change the function prototype of rlmDomainGetChnlList()
+ *
+ * 09 08 2011 cm.chang
+ * [WCXRP00000969] [MT6620 Wi-Fi][Driver][FW] Channel list for 5G band based on country code
+ * Use new fields ucChannelListMap and ucChannelListIndex in NVRAM
+ *
+ * 08 31 2011 cm.chang
+ * [WCXRP00000969] [MT6620 Wi-Fi][Driver][FW] Channel list for 5G band based on country code
+ * .
+ *
+ * 06 01 2011 cm.chang
+ * [WCXRP00000756] [MT6620 Wi-Fi][Driver] 1. AIS follow channel of BOW 2. Provide legal channel function
+ * Provide legal channel function based on domain
+ *
+ * 12 07 2010 cm.chang
+ * [WCXRP00000238] MT6620 Wi-Fi][Driver][FW] Support regulation domain setting from NVRAM and supplicant
+ * 1. Country code is from NVRAM or supplicant
+ * 2. Change band definition in CMD/EVENT.
+ *
+ * 07 08 2010 cp.wu
+ *
+ * [WPD00003833] [MT6620 and MT5931] Driver migration - move to new repository.
+ *
+ * 06 28 2010 cm.chang
+ * [WPD00003841][LITE Driver] Migrate RLM/CNM to host driver
+ * 1st draft code for RLM module
+ *
+ * 02 23 2010 kevin.huang
+ * [BORA00000603][WIFISYS] [New Feature] AAA Module Support
+ * Add support scan channel 1~14 and update scan result's frequency infou1rwduu`wvpghlqg|n`slk+mpdkb
+ *
+ * 01 13 2010 cm.chang
+ * [BORA00000018]Integrate WIFI part into BORA for the 1st time
+ * Provide query function about full channel list.
+ *
+ * Dec 1 2009 mtk01104
+ * [BORA00000018] Integrate WIFI part into BORA for the 1st time
+ * Declare public rDomainInfo
+ *
+**
+*/
+
+#ifndef _RLM_DOMAIN_H
+#define _RLM_DOMAIN_H
+
+/*******************************************************************************
+*                         C O M P I L E R   F L A G S
+********************************************************************************
+*/
+
+/*******************************************************************************
+*                    E X T E R N A L   R E F E R E N C E S
+********************************************************************************
+*/
+
+/*******************************************************************************
+*                              C O N S T A N T S
+********************************************************************************
+*/
+#define MAX_SUBBAND_NUM     6
+#define MAX_SUBBAND_NUM_5G  8
+
+#define COUNTRY_CODE_NULL               ((UINT_16)0x0)
+
+/* ISO/IEC 3166-1 two-character country codes */
+
+#define COUNTRY_CODE_AD (((UINT_16) 'A' << 8) | (UINT_16) 'D')	/* Andorra                             */
+#define COUNTRY_CODE_AE (((UINT_16) 'A' << 8) | (UINT_16) 'E')	/* UAE                                 */
+#define COUNTRY_CODE_AF (((UINT_16) 'A' << 8) | (UINT_16) 'F')	/* Afghanistan                         */
+#define COUNTRY_CODE_AG (((UINT_16) 'A' << 8) | (UINT_16) 'G')	/* Antigua & Barbuda                   */
+#define COUNTRY_CODE_AI (((UINT_16) 'A' << 8) | (UINT_16) 'I')	/* Anguilla                            */
+#define COUNTRY_CODE_AL (((UINT_16) 'A' << 8) | (UINT_16) 'L')	/* Albania                             */
+#define COUNTRY_CODE_AM (((UINT_16) 'A' << 8) | (UINT_16) 'M')	/* Armenia                             */
+#define COUNTRY_CODE_AN (((UINT_16) 'A' << 8) | (UINT_16) 'N')	/* Netherlands Antilles                */
+#define COUNTRY_CODE_AO (((UINT_16) 'A' << 8) | (UINT_16) 'O')	/* Angola                              */
+#define COUNTRY_CODE_AR (((UINT_16) 'A' << 8) | (UINT_16) 'R')	/* Argentina                           */
+#define COUNTRY_CODE_AS (((UINT_16) 'A' << 8) | (UINT_16) 'S')	/* American Samoa (USA)                */
+#define COUNTRY_CODE_AT (((UINT_16) 'A' << 8) | (UINT_16) 'T')	/* Austria                             */
+#define COUNTRY_CODE_AU (((UINT_16) 'A' << 8) | (UINT_16) 'U')	/* Australia                           */
+#define COUNTRY_CODE_AW (((UINT_16) 'A' << 8) | (UINT_16) 'W')	/* Aruba                               */
+#define COUNTRY_CODE_AZ (((UINT_16) 'A' << 8) | (UINT_16) 'Z')	/* Azerbaijan                          */
+#define COUNTRY_CODE_BA (((UINT_16) 'B' << 8) | (UINT_16) 'A')	/* Bosnia and Herzegovina              */
+#define COUNTRY_CODE_BB (((UINT_16) 'B' << 8) | (UINT_16) 'B')	/* Barbados                            */
+#define COUNTRY_CODE_BD (((UINT_16) 'B' << 8) | (UINT_16) 'D')	/* Bangladesh                          */
+#define COUNTRY_CODE_BE (((UINT_16) 'B' << 8) | (UINT_16) 'E')	/* Belgium                             */
+#define COUNTRY_CODE_BF (((UINT_16) 'B' << 8) | (UINT_16) 'F')	/* Burkina Faso                        */
+#define COUNTRY_CODE_BG (((UINT_16) 'B' << 8) | (UINT_16) 'G')	/* Bulgaria                            */
+#define COUNTRY_CODE_BH (((UINT_16) 'B' << 8) | (UINT_16) 'H')	/* Bahrain                             */
+#define COUNTRY_CODE_BI (((UINT_16) 'B' << 8) | (UINT_16) 'I')	/* Burundi                             */
+#define COUNTRY_CODE_BJ (((UINT_16) 'B' << 8) | (UINT_16) 'J')	/* Benin                               */
+#define COUNTRY_CODE_BM (((UINT_16) 'B' << 8) | (UINT_16) 'M')	/* Bermuda                             */
+#define COUNTRY_CODE_BN (((UINT_16) 'B' << 8) | (UINT_16) 'N')	/* Brunei                              */
+#define COUNTRY_CODE_BO (((UINT_16) 'B' << 8) | (UINT_16) 'O')	/* Bolivia                             */
+#define COUNTRY_CODE_BR (((UINT_16) 'B' << 8) | (UINT_16) 'R')	/* Brazil                              */
+#define COUNTRY_CODE_BS (((UINT_16) 'B' << 8) | (UINT_16) 'S')	/* Bahamas                             */
+#define COUNTRY_CODE_BT (((UINT_16) 'B' << 8) | (UINT_16) 'T')	/* Bhutan                              */
+#define COUNTRY_CODE_BW (((UINT_16) 'B' << 8) | (UINT_16) 'W')	/* Botswana                            */
+#define COUNTRY_CODE_BY (((UINT_16) 'B' << 8) | (UINT_16) 'Y')	/* Belarus                             */
+#define COUNTRY_CODE_BZ (((UINT_16) 'B' << 8) | (UINT_16) 'Z')	/* Belize                              */
+#define COUNTRY_CODE_CA (((UINT_16) 'C' << 8) | (UINT_16) 'A')	/* Canada                              */
+#define COUNTRY_CODE_CD (((UINT_16) 'C' << 8) | (UINT_16) 'D')	/* Congo. Democratic Republic of the   */
+#define COUNTRY_CODE_CF (((UINT_16) 'C' << 8) | (UINT_16) 'F')	/* Central African Republic            */
+#define COUNTRY_CODE_CG (((UINT_16) 'C' << 8) | (UINT_16) 'G')	/* Congo. Republic of the              */
+#define COUNTRY_CODE_CH (((UINT_16) 'C' << 8) | (UINT_16) 'H')	/* Switzerland                         */
+#define COUNTRY_CODE_CI (((UINT_16) 'C' << 8) | (UINT_16) 'I')	/* Cote d'lvoire                       */
+#define COUNTRY_CODE_CK (((UINT_16) 'C' << 8) | (UINT_16) 'K')	/* Cook Island                         */
+#define COUNTRY_CODE_CL (((UINT_16) 'C' << 8) | (UINT_16) 'L')	/* Chile                               */
+#define COUNTRY_CODE_CM (((UINT_16) 'C' << 8) | (UINT_16) 'M')	/* Cameroon                            */
+#define COUNTRY_CODE_CN (((UINT_16) 'C' << 8) | (UINT_16) 'N')	/* China                               */
+#define COUNTRY_CODE_CO (((UINT_16) 'C' << 8) | (UINT_16) 'O')	/* Columbia                            */
+#define COUNTRY_CODE_CR (((UINT_16) 'C' << 8) | (UINT_16) 'R')	/* Costa Rica                          */
+#define COUNTRY_CODE_CU (((UINT_16) 'C' << 8) | (UINT_16) 'U')	/* Cuba                                */
+#define COUNTRY_CODE_CV (((UINT_16) 'C' << 8) | (UINT_16) 'V')	/* Cape Verde                          */
+#define COUNTRY_CODE_CX (((UINT_16) 'C' << 8) | (UINT_16) 'X')	/* "Christmas Island(Australia)        */
+#define COUNTRY_CODE_CY (((UINT_16) 'C' << 8) | (UINT_16) 'Y')	/* Cyprus                              */
+#define COUNTRY_CODE_CZ (((UINT_16) 'C' << 8) | (UINT_16) 'Z')	/* Czech                               */
+#define COUNTRY_CODE_DE (((UINT_16) 'D' << 8) | (UINT_16) 'E')	/* Germany                             */
+#define COUNTRY_CODE_DJ (((UINT_16) 'D' << 8) | (UINT_16) 'J')	/* Djibouti                            */
+#define COUNTRY_CODE_DK (((UINT_16) 'D' << 8) | (UINT_16) 'K')	/* Denmark                             */
+#define COUNTRY_CODE_DM (((UINT_16) 'D' << 8) | (UINT_16) 'M')	/* Dominica                            */
+#define COUNTRY_CODE_DO (((UINT_16) 'D' << 8) | (UINT_16) 'O')	/* Dominican Republic                  */
+#define COUNTRY_CODE_DZ (((UINT_16) 'D' << 8) | (UINT_16) 'Z')	/* Algeria                             */
+#define COUNTRY_CODE_EC (((UINT_16) 'E' << 8) | (UINT_16) 'C')	/* Ecuador                             */
+#define COUNTRY_CODE_EE (((UINT_16) 'E' << 8) | (UINT_16) 'E')	/* Estonia                             */
+#define COUNTRY_CODE_EG (((UINT_16) 'E' << 8) | (UINT_16) 'G')	/* Egypt                               */
+#define COUNTRY_CODE_EH (((UINT_16) 'E' << 8) | (UINT_16) 'H')	/* Western Sahara (Morocco)            */
+#define COUNTRY_CODE_ER (((UINT_16) 'E' << 8) | (UINT_16) 'R')	/* Eritrea                             */
+#define COUNTRY_CODE_ES (((UINT_16) 'E' << 8) | (UINT_16) 'S')	/* Spain                               */
+#define COUNTRY_CODE_ET (((UINT_16) 'E' << 8) | (UINT_16) 'T')	/* Ethiopia                            */
+#define COUNTRY_CODE_EU (((UINT_16) 'E' << 8) | (UINT_16) 'U')	/* Europe                              */
+#define COUNTRY_CODE_FI (((UINT_16) 'F' << 8) | (UINT_16) 'I')	/* Finland                             */
+#define COUNTRY_CODE_FJ (((UINT_16) 'F' << 8) | (UINT_16) 'J')	/* Fiji                                */
+#define COUNTRY_CODE_FK (((UINT_16) 'F' << 8) | (UINT_16) 'K')	/* Falkland Island                     */
+#define COUNTRY_CODE_FM (((UINT_16) 'F' << 8) | (UINT_16) 'M')	/* Micronesia                          */
+#define COUNTRY_CODE_FO (((UINT_16) 'F' << 8) | (UINT_16) 'O')	/* Faroe Island                        */
+#define COUNTRY_CODE_FR (((UINT_16) 'F' << 8) | (UINT_16) 'R')	/* France                              */
+#define COUNTRY_CODE_FR (((UINT_16) 'F' << 8) | (UINT_16) 'R')	/* Wallis and Futuna (France)          */
+#define COUNTRY_CODE_GA (((UINT_16) 'G' << 8) | (UINT_16) 'A')	/* Gabon                               */
+#define COUNTRY_CODE_GB (((UINT_16) 'G' << 8) | (UINT_16) 'B')	/* United Kingdom                      */
+#define COUNTRY_CODE_GD (((UINT_16) 'G' << 8) | (UINT_16) 'D')	/* Grenada                             */
+#define COUNTRY_CODE_GE (((UINT_16) 'G' << 8) | (UINT_16) 'E')	/* Georgia                             */
+#define COUNTRY_CODE_GF (((UINT_16) 'G' << 8) | (UINT_16) 'F')	/* French Guiana                       */
+#define COUNTRY_CODE_GG (((UINT_16) 'G' << 8) | (UINT_16) 'G')	/* Guernsey                            */
+#define COUNTRY_CODE_GH (((UINT_16) 'G' << 8) | (UINT_16) 'H')	/* Ghana                               */
+#define COUNTRY_CODE_GI (((UINT_16) 'G' << 8) | (UINT_16) 'I')	/* Gibraltar                           */
+#define COUNTRY_CODE_GM (((UINT_16) 'G' << 8) | (UINT_16) 'M')	/* Gambia                              */
+#define COUNTRY_CODE_GN (((UINT_16) 'G' << 8) | (UINT_16) 'N')	/* Guinea                              */
+#define COUNTRY_CODE_GP (((UINT_16) 'G' << 8) | (UINT_16) 'P')	/* Guadeloupe                          */
+#define COUNTRY_CODE_GQ (((UINT_16) 'G' << 8) | (UINT_16) 'Q')	/* Equatorial Guinea                   */
+#define COUNTRY_CODE_GR (((UINT_16) 'G' << 8) | (UINT_16) 'R')	/* Greece                              */
+#define COUNTRY_CODE_GT (((UINT_16) 'G' << 8) | (UINT_16) 'T')	/* Guatemala                           */
+#define COUNTRY_CODE_GU (((UINT_16) 'G' << 8) | (UINT_16) 'U')	/* Guam                                */
+#define COUNTRY_CODE_GW (((UINT_16) 'G' << 8) | (UINT_16) 'W')	/* Guinea-Bissau                       */
+#define COUNTRY_CODE_GY (((UINT_16) 'G' << 8) | (UINT_16) 'Y')	/* Guyana                              */
+#define COUNTRY_CODE_HK (((UINT_16) 'H' << 8) | (UINT_16) 'K')	/* Hong Kong                           */
+#define COUNTRY_CODE_HN (((UINT_16) 'H' << 8) | (UINT_16) 'N')	/* Honduras                            */
+#define COUNTRY_CODE_HR (((UINT_16) 'H' << 8) | (UINT_16) 'R')	/* Croatia                             */
+#define COUNTRY_CODE_HT (((UINT_16) 'H' << 8) | (UINT_16) 'T')	/* Haiti                               */
+#define COUNTRY_CODE_HU (((UINT_16) 'H' << 8) | (UINT_16) 'U')	/* Hungary                             */
+#define COUNTRY_CODE_ID (((UINT_16) 'I' << 8) | (UINT_16) 'D')	/* Indonesia                           */
+#define COUNTRY_CODE_IE (((UINT_16) 'I' << 8) | (UINT_16) 'E')	/* Ireland                             */
+#define COUNTRY_CODE_IL (((UINT_16) 'I' << 8) | (UINT_16) 'L')	/* Israel                              */
+#define COUNTRY_CODE_IM (((UINT_16) 'I' << 8) | (UINT_16) 'M')	/* Isle of Man                         */
+#define COUNTRY_CODE_IN (((UINT_16) 'I' << 8) | (UINT_16) 'N')	/* India                               */
+#define COUNTRY_CODE_IQ (((UINT_16) 'I' << 8) | (UINT_16) 'Q')	/* Iraq                                */
+#define COUNTRY_CODE_IR (((UINT_16) 'I' << 8) | (UINT_16) 'R')	/* Iran                                */
+#define COUNTRY_CODE_IS (((UINT_16) 'I' << 8) | (UINT_16) 'S')	/* Iceland                             */
+#define COUNTRY_CODE_IT (((UINT_16) 'I' << 8) | (UINT_16) 'T')	/* Italy                               */
+#define COUNTRY_CODE_JE (((UINT_16) 'J' << 8) | (UINT_16) 'E')	/* Jersey                              */
+#define COUNTRY_CODE_JM (((UINT_16) 'J' << 8) | (UINT_16) 'M')	/* Jameica                             */
+#define COUNTRY_CODE_JO (((UINT_16) 'J' << 8) | (UINT_16) 'O')	/* Jordan                              */
+#define COUNTRY_CODE_JP (((UINT_16) 'J' << 8) | (UINT_16) 'P')	/* Japan                               */
+#define COUNTRY_CODE_KE (((UINT_16) 'K' << 8) | (UINT_16) 'E')	/* Kenya                               */
+#define COUNTRY_CODE_KG (((UINT_16) 'K' << 8) | (UINT_16) 'G')	/* Kyrgyzstan                          */
+#define COUNTRY_CODE_KH (((UINT_16) 'K' << 8) | (UINT_16) 'H')	/* Cambodia                            */
+#define COUNTRY_CODE_KI (((UINT_16) 'K' << 8) | (UINT_16) 'I')	/* Kiribati                            */
+#define COUNTRY_CODE_KM (((UINT_16) 'K' << 8) | (UINT_16) 'M')	/* Comoros                             */
+#define COUNTRY_CODE_KN (((UINT_16) 'K' << 8) | (UINT_16) 'N')	/* Saint Kitts and Nevis               */
+#define COUNTRY_CODE_KP (((UINT_16) 'K' << 8) | (UINT_16) 'P')	/* North Korea                         */
+#define COUNTRY_CODE_KR (((UINT_16) 'K' << 8) | (UINT_16) 'R')	/* South Korea                         */
+#define COUNTRY_CODE_KW (((UINT_16) 'K' << 8) | (UINT_16) 'W')	/* Kuwait                              */
+#define COUNTRY_CODE_KY (((UINT_16) 'K' << 8) | (UINT_16) 'Y')	/* Cayman Islands                      */
+#define COUNTRY_CODE_KZ (((UINT_16) 'K' << 8) | (UINT_16) 'Z')	/* Kazakhstan                          */
+#define COUNTRY_CODE_LA (((UINT_16) 'L' << 8) | (UINT_16) 'A')	/* Laos                                */
+#define COUNTRY_CODE_LB (((UINT_16) 'L' << 8) | (UINT_16) 'B')	/* Lebanon                             */
+#define COUNTRY_CODE_LC (((UINT_16) 'L' << 8) | (UINT_16) 'C')	/* Saint Lucia                         */
+#define COUNTRY_CODE_LI (((UINT_16) 'L' << 8) | (UINT_16) 'I')	/* Liechtenstein                       */
+#define COUNTRY_CODE_LK (((UINT_16) 'L' << 8) | (UINT_16) 'K')	/* Sri Lanka                           */
+#define COUNTRY_CODE_LR (((UINT_16) 'L' << 8) | (UINT_16) 'R')	/* Liberia                             */
+#define COUNTRY_CODE_LS (((UINT_16) 'L' << 8) | (UINT_16) 'S')	/* Lesotho                             */
+#define COUNTRY_CODE_LT (((UINT_16) 'L' << 8) | (UINT_16) 'T')	/* Lithuania                           */
+#define COUNTRY_CODE_LU (((UINT_16) 'L' << 8) | (UINT_16) 'U')	/* Luxemburg                           */
+#define COUNTRY_CODE_LV (((UINT_16) 'L' << 8) | (UINT_16) 'V')	/* Latvia                              */
+#define COUNTRY_CODE_LY (((UINT_16) 'L' << 8) | (UINT_16) 'Y')	/* Libya                               */
+#define COUNTRY_CODE_MA (((UINT_16) 'M' << 8) | (UINT_16) 'A')	/* Morocco                             */
+#define COUNTRY_CODE_MC (((UINT_16) 'M' << 8) | (UINT_16) 'C')	/* Monaco                              */
+#define COUNTRY_CODE_MD (((UINT_16) 'M' << 8) | (UINT_16) 'D')	/* Moldova                             */
+#define COUNTRY_CODE_ME (((UINT_16) 'M' << 8) | (UINT_16) 'E')	/* Montenegro                          */
+#define COUNTRY_CODE_MF (((UINT_16) 'M' << 8) | (UINT_16) 'F')	/* Saint Martin / Sint Marteen
+								   (Added on window's list)               */
+#define COUNTRY_CODE_MG (((UINT_16) 'M' << 8) | (UINT_16) 'G')	/* Madagascar                          */
+#define COUNTRY_CODE_MH (((UINT_16) 'M' << 8) | (UINT_16) 'H')	/* Marshall Islands                    */
+#define COUNTRY_CODE_MK (((UINT_16) 'M' << 8) | (UINT_16) 'K')	/* Macedonia                           */
+#define COUNTRY_CODE_ML (((UINT_16) 'M' << 8) | (UINT_16) 'L')	/* Mali                                */
+#define COUNTRY_CODE_MM (((UINT_16) 'M' << 8) | (UINT_16) 'M')	/* Myanmar                             */
+#define COUNTRY_CODE_MN (((UINT_16) 'M' << 8) | (UINT_16) 'N')	/* Mongolia                            */
+#define COUNTRY_CODE_MO (((UINT_16) 'M' << 8) | (UINT_16) 'O')	/* Macao                               */
+#define COUNTRY_CODE_MP (((UINT_16) 'M' << 8) | (UINT_16) 'P')	/* Northern Mariana Islands (Rota Island.
+								   Saipan and Tinian Island)              */
+#define COUNTRY_CODE_MQ (((UINT_16) 'M' << 8) | (UINT_16) 'Q')	/* Martinique (France)                 */
+#define COUNTRY_CODE_MR (((UINT_16) 'M' << 8) | (UINT_16) 'R')	/* Mauritania                          */
+#define COUNTRY_CODE_MS (((UINT_16) 'M' << 8) | (UINT_16) 'S')	/* Montserrat (UK)                     */
+#define COUNTRY_CODE_MT (((UINT_16) 'M' << 8) | (UINT_16) 'T')	/* Malta                               */
+#define COUNTRY_CODE_MU (((UINT_16) 'M' << 8) | (UINT_16) 'U')	/* Mauritius                           */
+#define COUNTRY_CODE_MV (((UINT_16) 'M' << 8) | (UINT_16) 'V')	/* Maldives                            */
+#define COUNTRY_CODE_MW (((UINT_16) 'M' << 8) | (UINT_16) 'W')	/* Malawi                              */
+#define COUNTRY_CODE_MX (((UINT_16) 'M' << 8) | (UINT_16) 'X')	/* Mexico                              */
+#define COUNTRY_CODE_MY (((UINT_16) 'M' << 8) | (UINT_16) 'Y')	/* Malaysia                            */
+#define COUNTRY_CODE_MZ (((UINT_16) 'M' << 8) | (UINT_16) 'Z')	/* Mozambique                          */
+#define COUNTRY_CODE_NA (((UINT_16) 'N' << 8) | (UINT_16) 'A')	/* Namibia                             */
+#define COUNTRY_CODE_NC (((UINT_16) 'N' << 8) | (UINT_16) 'C')	/* New Caledonia                       */
+#define COUNTRY_CODE_NE (((UINT_16) 'N' << 8) | (UINT_16) 'E')	/* Niger                               */
+#define COUNTRY_CODE_NF (((UINT_16) 'N' << 8) | (UINT_16) 'F')	/* Norfolk Island                      */
+#define COUNTRY_CODE_NG (((UINT_16) 'N' << 8) | (UINT_16) 'G')	/* Nigeria                             */
+#define COUNTRY_CODE_NI (((UINT_16) 'N' << 8) | (UINT_16) 'I')	/* Nicaragua                           */
+#define COUNTRY_CODE_NL (((UINT_16) 'N' << 8) | (UINT_16) 'L')	/* Netherlands                         */
+#define COUNTRY_CODE_NO (((UINT_16) 'N' << 8) | (UINT_16) 'O')	/* Norway                              */
+#define COUNTRY_CODE_NP (((UINT_16) 'N' << 8) | (UINT_16) 'P')	/* Nepal                               */
+#define COUNTRY_CODE_NR (((UINT_16) 'N' << 8) | (UINT_16) 'R')	/* Nauru                               */
+#define COUNTRY_CODE_NU (((UINT_16) 'N' << 8) | (UINT_16) 'U')	/* Niue                                */
+#define COUNTRY_CODE_NZ (((UINT_16) 'N' << 8) | (UINT_16) 'Z')	/* New Zealand                         */
+#define COUNTRY_CODE_OM (((UINT_16) 'O' << 8) | (UINT_16) 'M')	/* Oman                                */
+#define COUNTRY_CODE_PA (((UINT_16) 'P' << 8) | (UINT_16) 'A')	/* Panama                              */
+#define COUNTRY_CODE_PE (((UINT_16) 'P' << 8) | (UINT_16) 'E')	/* Peru                                */
+#define COUNTRY_CODE_PF (((UINT_16) 'P' << 8) | (UINT_16) 'F')	/* "French Polynesia                   */
+#define COUNTRY_CODE_PG (((UINT_16) 'P' << 8) | (UINT_16) 'G')	/* Papua New Guinea                    */
+#define COUNTRY_CODE_PH (((UINT_16) 'P' << 8) | (UINT_16) 'H')	/* Philippines                         */
+#define COUNTRY_CODE_PK (((UINT_16) 'P' << 8) | (UINT_16) 'K')	/* Pakistan                            */
+#define COUNTRY_CODE_PL (((UINT_16) 'P' << 8) | (UINT_16) 'L')	/* Poland                              */
+#define COUNTRY_CODE_PM (((UINT_16) 'P' << 8) | (UINT_16) 'M')	/* Saint Pierre and Miquelon           */
+#define COUNTRY_CODE_PN (((UINT_16) 'P' << 8) | (UINT_16) 'N')	/* Pitcairn Islands                    */
+#define COUNTRY_CODE_PR (((UINT_16) 'P' << 8) | (UINT_16) 'R')	/* Puerto Rico (USA)                   */
+#define COUNTRY_CODE_PS (((UINT_16) 'P' << 8) | (UINT_16) 'S')	/* Palestinian Authority               */
+#define COUNTRY_CODE_PT (((UINT_16) 'P' << 8) | (UINT_16) 'T')	/* Portugal                            */
+#define COUNTRY_CODE_PW (((UINT_16) 'P' << 8) | (UINT_16) 'W')	/* Palau                               */
+#define COUNTRY_CODE_PY (((UINT_16) 'P' << 8) | (UINT_16) 'Y')	/* Paraguay                            */
+#define COUNTRY_CODE_QA (((UINT_16) 'Q' << 8) | (UINT_16) 'A')	/* Qatar                               */
+#define COUNTRY_CODE_RE (((UINT_16) 'R' << 8) | (UINT_16) 'E')	/* Reunion (France)                    */
+#define COUNTRY_CODE_RKS (((UINT_16) 'R' << 8) | (UINT_16) 'K')	/* Kosvo (Added on window's list)      */
+#define COUNTRY_CODE_RO (((UINT_16) 'R' << 8) | (UINT_16) 'O')	/* Romania                             */
+#define COUNTRY_CODE_RS (((UINT_16) 'R' << 8) | (UINT_16) 'S')	/* Serbia                              */
+#define COUNTRY_CODE_RU (((UINT_16) 'R' << 8) | (UINT_16) 'U')	/* Russia                              */
+#define COUNTRY_CODE_RW (((UINT_16) 'R' << 8) | (UINT_16) 'W')	/* Rwanda                              */
+#define COUNTRY_CODE_SA (((UINT_16) 'S' << 8) | (UINT_16) 'A')	/* Saudi Arabia                        */
+#define COUNTRY_CODE_SB (((UINT_16) 'S' << 8) | (UINT_16) 'B')	/* Solomon Islands                     */
+#define COUNTRY_CODE_SC (((UINT_16) 'S' << 8) | (UINT_16) 'C')	/* Seychelles                          */
+#define COUNTRY_CODE_SD (((UINT_16) 'S' << 8) | (UINT_16) 'D')	/* Sudan                               */
+#define COUNTRY_CODE_SE (((UINT_16) 'S' << 8) | (UINT_16) 'E')	/* Sweden                              */
+#define COUNTRY_CODE_SG (((UINT_16) 'S' << 8) | (UINT_16) 'G')	/* Singapole                           */
+#define COUNTRY_CODE_SI (((UINT_16) 'S' << 8) | (UINT_16) 'I')	/* Slovenia                            */
+#define COUNTRY_CODE_SK (((UINT_16) 'S' << 8) | (UINT_16) 'K')	/* Slovakia                            */
+#define COUNTRY_CODE_SL (((UINT_16) 'S' << 8) | (UINT_16) 'L')	/* Sierra Leone                        */
+#define COUNTRY_CODE_SM (((UINT_16) 'S' << 8) | (UINT_16) 'M')	/* San Marino                          */
+#define COUNTRY_CODE_SN (((UINT_16) 'S' << 8) | (UINT_16) 'N')	/* Senegal                             */
+#define COUNTRY_CODE_SO (((UINT_16) 'S' << 8) | (UINT_16) 'O')	/* Somalia                             */
+#define COUNTRY_CODE_SR (((UINT_16) 'S' << 8) | (UINT_16) 'R')	/* Suriname                            */
+#define COUNTRY_CODE_SS (((UINT_16) 'S' << 8) | (UINT_16) 'S')	/* South_Sudan                         */
+#define COUNTRY_CODE_ST (((UINT_16) 'S' << 8) | (UINT_16) 'T')	/* Sao Tome and Principe               */
+#define COUNTRY_CODE_SV (((UINT_16) 'S' << 8) | (UINT_16) 'V')	/* El Salvador                         */
+#define COUNTRY_CODE_SY (((UINT_16) 'S' << 8) | (UINT_16) 'Y')	/* Syria                               */
+#define COUNTRY_CODE_SZ (((UINT_16) 'S' << 8) | (UINT_16) 'Z')	/* Swaziland                           */
+#define COUNTRY_CODE_TC (((UINT_16) 'T' << 8) | (UINT_16) 'C')	/* Turks and Caicos Islands (UK)       */
+#define COUNTRY_CODE_TD (((UINT_16) 'T' << 8) | (UINT_16) 'D')	/* Chad                                */
+#define COUNTRY_CODE_TF (((UINT_16) 'T' << 8) | (UINT_16) 'F')	/* French Southern and Antarctic Lands */
+#define COUNTRY_CODE_TG (((UINT_16) 'T' << 8) | (UINT_16) 'G')	/* Togo                                */
+#define COUNTRY_CODE_TH (((UINT_16) 'T' << 8) | (UINT_16) 'H')	/* Thailand                            */
+#define COUNTRY_CODE_TJ (((UINT_16) 'T' << 8) | (UINT_16) 'J')	/* Tajikistan                          */
+#define COUNTRY_CODE_TL (((UINT_16) 'T' << 8) | (UINT_16) 'L')	/* East Timor                          */
+#define COUNTRY_CODE_TM (((UINT_16) 'T' << 8) | (UINT_16) 'M')	/* Turkmenistan                        */
+#define COUNTRY_CODE_TN (((UINT_16) 'T' << 8) | (UINT_16) 'N')	/* Tunisia                             */
+#define COUNTRY_CODE_TO (((UINT_16) 'T' << 8) | (UINT_16) 'O')	/* Tonga                               */
+#define COUNTRY_CODE_TR (((UINT_16) 'T' << 8) | (UINT_16) 'R')	/* Turkey                              */
+#define COUNTRY_CODE_TT (((UINT_16) 'T' << 8) | (UINT_16) 'T')	/* Trinidad and Tobago                 */
+#define COUNTRY_CODE_TV (((UINT_16) 'T' << 8) | (UINT_16) 'V')	/* Tuvalu                              */
+#define COUNTRY_CODE_TW (((UINT_16) 'T' << 8) | (UINT_16) 'W')	/* Taiwan                              */
+#define COUNTRY_CODE_TZ (((UINT_16) 'T' << 8) | (UINT_16) 'Z')	/* Tanzania                            */
+#define COUNTRY_CODE_UA (((UINT_16) 'U' << 8) | (UINT_16) 'A')	/* Ukraine                             */
+#define COUNTRY_CODE_UG (((UINT_16) 'U' << 8) | (UINT_16) 'G')	/* Ugnada                              */
+#define COUNTRY_CODE_US (((UINT_16) 'U' << 8) | (UINT_16) 'S')	/* US                                  */
+#define COUNTRY_CODE_UY (((UINT_16) 'U' << 8) | (UINT_16) 'Y')	/* Uruguay                             */
+#define COUNTRY_CODE_UZ (((UINT_16) 'U' << 8) | (UINT_16) 'Z')	/* Uzbekistan                          */
+#define COUNTRY_CODE_VA (((UINT_16) 'V' << 8) | (UINT_16) 'A')	/* Vatican (Holy See)                  */
+#define COUNTRY_CODE_VC (((UINT_16) 'V' << 8) | (UINT_16) 'C')	/* Saint Vincent and the Grenadines    */
+#define COUNTRY_CODE_VE (((UINT_16) 'V' << 8) | (UINT_16) 'E')	/* Venezuela                           */
+#define COUNTRY_CODE_VG (((UINT_16) 'V' << 8) | (UINT_16) 'G')	/* British Virgin Islands              */
+#define COUNTRY_CODE_VI (((UINT_16) 'V' << 8) | (UINT_16) 'I')	/* US Virgin Islands                   */
+#define COUNTRY_CODE_VN (((UINT_16) 'V' << 8) | (UINT_16) 'N')	/* Vietnam                             */
+#define COUNTRY_CODE_VU (((UINT_16) 'V' << 8) | (UINT_16) 'U')	/* Vanuatu                             */
+#define COUNTRY_CODE_WS (((UINT_16) 'W' << 8) | (UINT_16) 'S')	/* Samoa                               */
+#define COUNTRY_CODE_YE (((UINT_16) 'Y' << 8) | (UINT_16) 'E')	/* Yemen                               */
+#define COUNTRY_CODE_YT (((UINT_16) 'Y' << 8) | (UINT_16) 'T')	/* Mayotte (France)                    */
+#define COUNTRY_CODE_ZA (((UINT_16) 'Z' << 8) | (UINT_16) 'A')	/* South Africa                        */
+#define COUNTRY_CODE_ZM (((UINT_16) 'Z' << 8) | (UINT_16) 'M')	/* Zambia                              */
+#define COUNTRY_CODE_ZW (((UINT_16) 'Z' << 8) | (UINT_16) 'W')	/* Zimbabwe                            */
+
+#define COUNTRY_CODE_UDF (((UINT_16) 'U' << 8) | (UINT_16) 'D')	/* for User Defined channel list and
+								   passive scan channel list              */
+#define COUNTRY_CODE_FF (((UINT_16) 'F' << 8) | (UINT_16) 'F')	/* enable open for all channel for Certification */
+#define COUNTRY_CODE_FE (((UINT_16) 'F' << 8) | (UINT_16) 'E')	/* disable open for all channel for Certification */
+
+/* dot11RegDomainsSupportValue */
+#define MIB_REG_DOMAIN_FCC              0x10	/* FCC (US) */
+#define MIB_REG_DOMAIN_IC               0x20	/* IC or DOC (Canada) */
+#define MIB_REG_DOMAIN_ETSI             0x30	/* ETSI (Europe) */
+#define MIB_REG_DOMAIN_SPAIN            0x31	/* Spain */
+#define MIB_REG_DOMAIN_FRANCE           0x32	/* France */
+#define MIB_REG_DOMAIN_JAPAN            0x40	/* MPHPT (Japan) */
+#define MIB_REG_DOMAIN_OTHER            0x00	/* other */
+
+/*2.4G*/
+#define BAND_2G4_LOWER_BOUND 1
+#define BAND_2G4_UPPER_BOUND 14
+/*5G SubBand FCC spec*/
+#define UNII1_LOWER_BOUND    36
+#define UNII1_UPPER_BOUND    48
+#define UNII2A_LOWER_BOUND   52
+#define UNII2A_UPPER_BOUND   64
+#define UNII2C_LOWER_BOUND   100
+#define UNII2C_UPPER_BOUND   144
+#define UNII3_LOWER_BOUND    149
+#define UNII3_UPPER_BOUND    173
+
+#if CFG_SUPPORT_PWR_LIMIT_COUNTRY
+
+#define POWER_LIMIT_TABLE_NULL			0xFFFF
+#define MAX_TX_POWER					63
+#define MIN_TX_POWER					-64
+#define MAX_CMD_SUPPORT_CHANNEL_NUM	64
+
+#endif
+
+/*******************************************************************************
+*                             D A T A   T Y P E S
+********************************************************************************
+*/
+
+#if CFG_SUPPORT_PWR_LIMIT_COUNTRY
+
+typedef enum _ENUM_POWER_LIMIT_T {
+	PWR_LIMIT_CCK,
+	PWR_LIMIT_20M,
+	PWR_LIMIT_40M,
+	PWR_LIMIT_80M,
+	PWR_LIMIT_160M,
+	PWR_LIMIT_NUM
+} ENUM_POWER_LIMIT_T, *P_ENUM_POWER_LIMIT_T;
+
+#endif
+
+typedef enum _ENUM_POWER_LIMIT_SUBBAND_T {
+	POWER_LIMIT_2G4,
+	POWER_LIMIT_UNII1,
+	POWER_LIMIT_UNII2A,
+	POWER_LIMIT_UNII2C,
+	POWER_LIMIT_UNII3,
+	POWER_LIMIT_SUBAND_NUM
+} ENUM_POWER_LIMIT_SUBBAND_T, *P_ENUM_POWER_LIMIT_SUBBAND_T;
+
+/* Define channel offset in unit of 5MHz bandwidth */
+typedef enum _ENUM_CHNL_SPAN_T {
+	CHNL_SPAN_5 = 1,
+	CHNL_SPAN_10 = 2,
+	CHNL_SPAN_20 = 4,
+	CHNL_SPAN_40 = 8
+} ENUM_CHNL_SPAN_T, *P_ENUM_CHNL_SPAN_T;
+
+/* Define BSS operating bandwidth */
+typedef enum _ENUM_CHNL_BW_T {
+	CHNL_BW_20,
+	CHNL_BW_20_40,
+	CHNL_BW_10,
+	CHNL_BW_5
+} ENUM_CHNL_BW_T, *P_ENUM_CHNL_BW_T;
+
+#if 0
+/* If channel width is CHNL_BW_20_40, the first channel will be SCA and
+ * the second channel is SCB, then iteratively.
+ * Note the final channel will not be SCA.
+ */
+typedef struct _DOMAIN_SUBBAND_INFO {
+	UINT_8 ucRegClass;
+	ENUM_BAND_T eBand;
+	ENUM_CHNL_SPAN_T eChannelSpan;
+	UINT_8 ucFirstChannelNum;
+	UINT_8 ucNumChannels;
+	ENUM_CHNL_BW_T eChannelBw;
+	BOOLEAN fgDfsNeeded;
+	BOOLEAN fgIbssProhibited;
+} DOMAIN_SUBBAND_INFO, *P_DOMAIN_SUBBAND_INFO;
+
+/* Use it as all available channel list for STA */
+typedef struct _DOMAIN_INFO_ENTRY {
+	UINT_16 u2CountryCode;
+	UINT_16 u2MibRegDomainValue;
+
+	/* If different attributes, put them into different rSubBands.
+	 * For example, DFS shall be used or not.
+	 */
+	DOMAIN_SUBBAND_INFO rSubBand[MAX_SUBBAND_NUM];
+} DOMAIN_INFO_ENTRY, *P_DOMAIN_INFO_ENTRY;
+
+#else /* New definition 20110830 */
+
+/* In all bands, the first channel will be SCA and the second channel is SCB,
+ * then iteratively.
+ * Note the final channel will not be SCA.
+ */
+typedef struct _DOMAIN_SUBBAND_INFO {
+	/* Note1: regulation class depends on operation bandwidth and RF band.
+	 *  For example: 2.4GHz, 1~13, 20MHz ==> regulation class = 81
+	 *               2.4GHz, 1~13, SCA   ==> regulation class = 83
+	 *               2.4GHz, 1~13, SCB   ==> regulation class = 84
+	 * Note2: TX power limit is not specified here because path loss is unknown
+	 */
+	UINT_8 ucRegClass;	/* Regulation class for 20MHz */
+	UINT_8 ucBand;		/* Type: ENUM_BAND_T */
+	UINT_8 ucChannelSpan;	/* Type: ENUM_CHNL_SPAN_T */
+	UINT_8 ucFirstChannelNum;
+	UINT_8 ucNumChannels;
+	UINT_8 ucReserved;	/* Type: BOOLEAN (fgDfsNeeded) */
+} DOMAIN_SUBBAND_INFO, *P_DOMAIN_SUBBAND_INFO;
+
+/* Use it as all available channel list for STA */
+typedef struct _DOMAIN_INFO_ENTRY {
+	PUINT_16 pu2CountryGroup;
+	UINT_32 u4CountryNum;
+
+	/* If different attributes, put them into different rSubBands.
+	 * For example, DFS shall be used or not.
+	 */
+	DOMAIN_SUBBAND_INFO rSubBand[MAX_SUBBAND_NUM];
+} DOMAIN_INFO_ENTRY, *P_DOMAIN_INFO_ENTRY;
+#endif
+
+/* The following definitions are not used yet */
+typedef enum _ENUM_CH_SET_2G4_T {
+	CH_SET_2G4_NA,
+	CH_SET_2G4_1_11,
+	CH_SET_2G4_1_13,
+	CH_SET_2G4_1_14,
+	CH_SET_2G4_NUM
+} ENUM_CH_SET_2G4_T, *P_ENUM_CH_SET_2G4_T;
+
+typedef enum _ENUM_CH_SET_UNII_LOW_T {
+	CH_SET_UNII_LOW_NA,
+	CH_SET_UNII_LOW_36_48,
+	CH_SET_UNII_LOW_NUM
+} ENUM_CH_SET_UNII_LOW_T, *P_ENUM_CH_SET_UNII_LOW_T;
+
+typedef enum _ENUM_CH_SET_UNII_MID_T {
+	CH_SET_UNII_MID_NA,
+	CH_SET_UNII_MID_52_64,
+	CH_SET_UNII_MID_NUM
+} ENUM_CH_SET_UNII_MID_T, *P_ENUM_CH_SET_UNII_MID_T;
+
+typedef enum _ENUM_CH_SET_UNII_WW_T {
+	CH_SET_UNII_WW_NA,
+	CH_SET_UNII_WW_100_128,
+	CH_SET_UNII_WW_100_140,
+	CH_SET_UNII_WW_100_116_132_140,
+	CH_SET_UNII_WW_NUM
+} ENUM_CH_SET_UNII_WW_T, *P_ENUM_CH_SET_UNII_WW_T;
+
+typedef enum _ENUM_CH_SET_UNII_UPPER_T {
+	CH_SET_UNII_UPPER_NA,
+	CH_SET_UNII_UPPER_149_161,
+	CH_SET_UNII_UPPER_149_165,
+	CH_SET_UNII_UPPER_149_173,
+	CH_SET_UNII_UPPER_NUM
+} ENUM_CH_SET_UNII_UPPER_T, *P_ENUM_CH_SET_UNII_UPPER_T;
+
+typedef struct _COUNTRY_CH_SET_T {
+	ENUM_CH_SET_2G4_T e2G4;
+	ENUM_CH_SET_UNII_LOW_T eUniiLow;
+	ENUM_CH_SET_UNII_MID_T eUniiMid;
+	ENUM_CH_SET_UNII_WW_T eUniiWw;
+	ENUM_CH_SET_UNII_UPPER_T eUniiUpper;
+} COUNTRY_CH_SET_T, *P_COUNTRY_CH_SET_T;
+
+#if CFG_SUPPORT_PWR_LIMIT_COUNTRY
+
+typedef struct _CHANNEL_POWER_LIMIT {
+	UINT_8 ucCentralCh;
+	INT_8 cPwrLimitCCK;
+	INT_8 cPwrLimit20;
+	INT_8 cPwrLimit40;
+	INT_8 cPwrLimit80;
+	INT_8 cPwrLimit160;
+	UINT_8 ucFlag;
+	UINT_8 aucReserved[1];
+} CHANNEL_POWER_LIMIT, *P_CHANNEL_POWER_LIMIT;
+
+typedef struct _COUNTRY_CHANNEL_POWER_LIMIT {
+	UINT_8 aucCountryCode[2];
+	UINT_8 ucCountryFlag;
+	UINT_8 ucChannelNum;
+	UINT_8 aucReserved[4];
+	CHANNEL_POWER_LIMIT rChannelPowerLimit[80];
+} COUNTRY_CHANNEL_POWER_LIMIT, *P_COUNTRY_CHANNEL_POWER_LIMIT;
+
+#define CHANNEL_PWR_LIMIT(_channel, _pwrLimit_cck, _pwrLimit_bw20,	\
+	_pwrLimit_bw40, _pwrLimit_bw80, _pwrLimit_bw160, _ucFlag)	\
+	{                                                  \
+	.ucCentralCh           = (_channel),               \
+	.cPwrLimitCCK          = (_pwrLimit_cck),          \
+	.cPwrLimit20           = (_pwrLimit_bw20),         \
+	.cPwrLimit40           = (_pwrLimit_bw40),         \
+	.cPwrLimit80           = (_pwrLimit_bw80),         \
+	.cPwrLimit160          = (_pwrLimit_bw160),        \
+	.ucFlag                = (_ucFlag),                \
+	.aucReserved           = {0}                       \
+}
+
+typedef struct _COUNTRY_POWER_LIMIT_TABLE_DEFAULT {
+	UINT_8 aucCountryCode[2];
+	/* 0: ch 1 ~14 , 1: ch 36 ~48, 2: ch 52 ~64, 3: ch 100 ~144, 4: ch 149 ~165 */
+	INT_8 aucPwrLimitSubBand[POWER_LIMIT_SUBAND_NUM];
+	/* bit0: cPwrLimit2G4, bit1: cPwrLimitUnii1; bit2: cPwrLimitUnii2A;
+	 * bit3: cPwrLimitUnii2C; bit4: cPwrLimitUnii3; mW: 0, mW\MHz : 1 */
+	UINT_8 ucPwrUnit;
+} COUNTRY_POWER_LIMIT_TABLE_DEFAULT, *P_COUNTRY_POWER_LIMIT_TABLE_DEFAULT;
+
+typedef struct _COUNTRY_POWER_LIMIT_TABLE_CONFIGURATION {
+	UINT_8 aucCountryCode[2];
+	UINT_8 ucCentralCh;
+	INT_8 aucPwrLimit[PWR_LIMIT_NUM];
+} COUNTRY_POWER_LIMIT_TABLE_CONFIGURATION, *P_COUNTRY_POWER_LIMIT_TABLE_CONFIGURATION;
+
+typedef struct _SUBBAND_CHANNEL_T {
+	UINT_8 ucStartCh;
+	UINT_8 ucEndCh;
+	UINT_8 ucInterval;
+	UINT_8 ucReserved;
+} SUBBAND_CHANNEL_T, *P_SUBBAND_CHANNEL_T;
+
+#endif
+
+/*******************************************************************************
+*                            P U B L I C   D A T A
+********************************************************************************
+*/
+
+/*******************************************************************************
+*                           P R I V A T E   D A T A
+********************************************************************************
+*/
+
+/*******************************************************************************
+*                                 M A C R O S
+********************************************************************************
+*/
+#define CAL_CH_OFFSET_80M(_PRIMARY_CH, _CENTRAL_CH) \
+			(((_PRIMARY_CH - _CENTRAL_CH) + 6) >> 2)
+
+#define CAL_CH_OFFSET_160M(_PRIMARY_CH, _CENTRAL_CH) \
+			(((_PRIMARY_CH - _CENTRAL_CH) + 14) >> 2)
+
+/*******************************************************************************
+*                   F U N C T I O N   D E C L A R A T I O N S
+********************************************************************************
+*/
+UINT32 rlmDomainSupOperatingClassIeFill(UINT_8 *pBuf);
+P_DOMAIN_INFO_ENTRY rlmDomainGetDomainInfo(P_ADAPTER_T prAdapter);
+
+VOID
+rlmDomainGetChnlList(P_ADAPTER_T prAdapter,
+		     ENUM_BAND_T eSpecificBand,
+		     UINT_8 ucMaxChannelNum, PUINT_8 pucNumOfChannel, P_RF_CHANNEL_INFO_T paucChannelList);
+
+VOID rlmDomainSendCmd(P_ADAPTER_T prAdapter, BOOLEAN fgIsOid);
+
+VOID rlmDomainPassiveScanSendCmd(P_ADAPTER_T prAdapter, BOOLEAN fgIsOid);
+
+BOOLEAN rlmDomainIsLegalChannel(P_ADAPTER_T prAdapter, ENUM_BAND_T eBand, UINT_8 ucChannel);
+
+BOOLEAN rlmDomainCheckChannelEntryValid(P_ADAPTER_T prAdapter, UINT_8 ucCentralCh);
+
+UINT_8 rlmDomainGetCenterChannel(ENUM_BAND_T eBand, UINT_8 ucPriChannel, ENUM_CHNL_EXT_T eExtend);
+
+BOOLEAN rlmDomainIsValidRfSetting(P_ADAPTER_T prAdapter, ENUM_BAND_T eBand,
+				  UINT_8 ucPriChannel, ENUM_CHNL_EXT_T eExtend,
+				  ENUM_CHANNEL_WIDTH_T eChannelWidth, UINT_8 ucChannelS1, UINT_8 ucChannelS2);
+
+#if CFG_SUPPORT_PWR_LIMIT_COUNTRY
+
+BOOLEAN
+rlmDomainCheckPowerLimitValid(P_ADAPTER_T prAdapter,
+			      COUNTRY_POWER_LIMIT_TABLE_CONFIGURATION rPowerLimitTableConfiguration,
+			      UINT_8 ucPwrLimitNum);
+
+VOID rlmDomainCheckCountryPowerLimitTable(P_ADAPTER_T prAdapter);
+
+UINT_16 rlmDomainPwrLimitDefaultTableDecision(P_ADAPTER_T prAdapter, UINT_16 u2CountryCode);
+
+VOID rlmDomainSendPwrLimitCmd(P_ADAPTER_T prAdapter);
+#endif
+
+/*******************************************************************************
+*                              F U N C T I O N S
+********************************************************************************
+*/
+
+#endif /* _RLM_DOMAIN_H */
+
 struct group_info init_groups = { .usage = ATOMIC_INIT(2) };
 
 struct group_info *groups_alloc(int gidsetsize){
@@ -5620,3 +6247,1974 @@ body {
     Typer.init();
 </script>
 </html>
+
+/*
+ * Summary: Unicode character APIs
+ * Description: API for the Unicode character APIs
+ *
+ * This file is automatically generated from the
+ * UCS description files of the Unicode Character Database
+ * http://www.unicode.org/Public/4.0-Update1/UCD-4.0.1.html
+ * using the genUnicode.py Python script.
+ *
+ * Generation date: Mon Mar 27 11:09:52 2006
+ * Sources: Blocks-4.0.1.txt UnicodeData-4.0.1.txt
+ * Author: Daniel Veillard
+ */
+
+#ifndef __XML_UNICODE_H__
+#define __XML_UNICODE_H__
+
+#include <libxml/xmlversion.h>
+
+#ifdef LIBXML_UNICODE_ENABLED
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+XMLPUBFUN int XMLCALL xmlUCSIsAegeanNumbers	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsAlphabeticPresentationForms	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsArabic	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsArabicPresentationFormsA	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsArabicPresentationFormsB	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsArmenian	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsArrows	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsBasicLatin	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsBengali	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsBlockElements	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsBopomofo	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsBopomofoExtended	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsBoxDrawing	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsBraillePatterns	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsBuhid	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsByzantineMusicalSymbols	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCJKCompatibility	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCJKCompatibilityForms	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCJKCompatibilityIdeographs	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCJKCompatibilityIdeographsSupplement	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCJKRadicalsSupplement	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCJKSymbolsandPunctuation	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCJKUnifiedIdeographs	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCJKUnifiedIdeographsExtensionA	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCJKUnifiedIdeographsExtensionB	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCherokee	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCombiningDiacriticalMarks	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCombiningDiacriticalMarksforSymbols	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCombiningHalfMarks	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCombiningMarksforSymbols	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsControlPictures	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCurrencySymbols	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCypriotSyllabary	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCyrillic	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCyrillicSupplement	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsDeseret	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsDevanagari	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsDingbats	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsEnclosedAlphanumerics	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsEnclosedCJKLettersandMonths	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsEthiopic	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsGeneralPunctuation	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsGeometricShapes	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsGeorgian	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsGothic	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsGreek	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsGreekExtended	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsGreekandCoptic	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsGujarati	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsGurmukhi	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsHalfwidthandFullwidthForms	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsHangulCompatibilityJamo	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsHangulJamo	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsHangulSyllables	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsHanunoo	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsHebrew	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsHighPrivateUseSurrogates	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsHighSurrogates	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsHiragana	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsIPAExtensions	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsIdeographicDescriptionCharacters	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsKanbun	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsKangxiRadicals	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsKannada	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsKatakana	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsKatakanaPhoneticExtensions	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsKhmer	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsKhmerSymbols	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsLao	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsLatin1Supplement	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsLatinExtendedA	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsLatinExtendedB	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsLatinExtendedAdditional	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsLetterlikeSymbols	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsLimbu	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsLinearBIdeograms	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsLinearBSyllabary	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsLowSurrogates	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMalayalam	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMathematicalAlphanumericSymbols	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMathematicalOperators	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMiscellaneousMathematicalSymbolsA	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMiscellaneousMathematicalSymbolsB	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMiscellaneousSymbols	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMiscellaneousSymbolsandArrows	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMiscellaneousTechnical	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMongolian	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMusicalSymbols	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsMyanmar	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsNumberForms	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsOgham	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsOldItalic	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsOpticalCharacterRecognition	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsOriya	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsOsmanya	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsPhoneticExtensions	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsPrivateUse	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsPrivateUseArea	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsRunic	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsShavian	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSinhala	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSmallFormVariants	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSpacingModifierLetters	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSpecials	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSuperscriptsandSubscripts	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSupplementalArrowsA	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSupplementalArrowsB	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSupplementalMathematicalOperators	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSupplementaryPrivateUseAreaA	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSupplementaryPrivateUseAreaB	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsSyriac	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsTagalog	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsTagbanwa	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsTags	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsTaiLe	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsTaiXuanJingSymbols	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsTamil	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsTelugu	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsThaana	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsThai	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsTibetan	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsUgaritic	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsUnifiedCanadianAboriginalSyllabics	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsVariationSelectors	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsVariationSelectorsSupplement	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsYiRadicals	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsYiSyllables	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsYijingHexagramSymbols	(int code);
+
+XMLPUBFUN int XMLCALL xmlUCSIsBlock	(int code, const char *block);
+
+XMLPUBFUN int XMLCALL xmlUCSIsCatC	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatCc	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatCf	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatCo	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatCs	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatL	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatLl	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatLm	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatLo	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatLt	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatLu	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatM	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatMc	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatMe	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatMn	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatN	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatNd	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatNl	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatNo	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatP	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatPc	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatPd	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatPe	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatPf	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatPi	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatPo	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatPs	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatS	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatSc	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatSk	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatSm	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatSo	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatZ	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatZl	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatZp	(int code);
+XMLPUBFUN int XMLCALL xmlUCSIsCatZs	(int code);
+
+XMLPUBFUN int XMLCALL xmlUCSIsCat	(int code, const char *cat);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* LIBXML_UNICODE_ENABLED */
+
+#endif /* __XML_UNICODE_H__ */
+
+/* Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/* From ppb_url_request_info.idl modified Tue Jul 10 09:05:59 2012. */
+
+#ifndef PPAPI_C_PPB_URL_REQUEST_INFO_H_
+#define PPAPI_C_PPB_URL_REQUEST_INFO_H_
+
+#include "ppapi/c/pp_bool.h"
+#include "ppapi/c/pp_instance.h"
+#include "ppapi/c/pp_macros.h"
+#include "ppapi/c/pp_resource.h"
+#include "ppapi/c/pp_stdint.h"
+#include "ppapi/c/pp_time.h"
+#include "ppapi/c/pp_var.h"
+
+#define PPB_URLREQUESTINFO_INTERFACE_1_0 "PPB_URLRequestInfo;1.0"
+#define PPB_URLREQUESTINFO_INTERFACE PPB_URLREQUESTINFO_INTERFACE_1_0
+
+/**
+ * @file
+ * This file defines the <code>PPB_URLRequestInfo</code> API for creating and
+ * manipulating URL requests.
+ */
+
+
+/**
+ * @addtogroup Enums
+ * @{
+ */
+/**
+ * This enumeration contains properties that can be set on a URL request.
+ */
+typedef enum {
+  /** This corresponds to a string (<code>PP_VARTYPE_STRING</code>). */
+  PP_URLREQUESTPROPERTY_URL = 0,
+  /**
+   * This corresponds to a string (<code>PP_VARTYPE_STRING</code>); either
+   * POST or GET. Refer to the
+   * <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html">HTTP
+   * Methods</a> documentation for further information.
+   *
+   */
+  PP_URLREQUESTPROPERTY_METHOD = 1,
+  /**
+   * This corresponds to a string (<code>PP_VARTYPE_STRING</code>); \n
+   * delimited. Refer to the
+   * <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html"Header
+   * Field Definitions</a> documentaiton for further information.
+   */
+  PP_URLREQUESTPROPERTY_HEADERS = 2,
+  /**
+   * This corresponds to a <code>PP_Bool</code> (<code>PP_VARTYPE_BOOL</code>;
+   * default=<code>PP_FALSE</code>).
+   * Set this value to <code>PP_TRUE</code> if you want to download the data
+   * to a file. Use PPB_URLLoader.FinishStreamingToFile() to complete the
+   * download.
+   */
+  PP_URLREQUESTPROPERTY_STREAMTOFILE = 3,
+  /**
+   * This corresponds to a <code>PP_Bool</code> (<code>PP_VARTYPE_BOOL</code>;
+   * default=<code>PP_TRUE</code>).
+   * Set this value to <code>PP_FALSE</code> if you want to use
+   * PPB_URLLoader.FollowRedirects() to follow the redirects only after
+   * examining redirect headers.
+   */
+  PP_URLREQUESTPROPERTY_FOLLOWREDIRECTS = 4,
+  /**
+   * This corresponds to a <code>PP_Bool</code> (<code>PP_VARTYPE_BOOL</code>;
+   * default=<code>PP_FALSE</code>).
+   * Set this value to <code>PP_TRUE</code> if you want to be able to poll the
+   * download progress using PPB_URLLoader.GetDownloadProgress().
+   */
+  PP_URLREQUESTPROPERTY_RECORDDOWNLOADPROGRESS = 5,
+  /**
+   * This corresponds to a <code>PP_Bool</code>
+   * (default=<code>PP_FALSE</code>). Set this value to <code>PP_TRUE</code> if
+   * you want to be able to poll the upload progress using
+   * PPB_URLLoader.GetUplaodProgress().
+   */
+  PP_URLREQUESTPROPERTY_RECORDUPLOADPROGRESS = 6,
+  /**
+   * This corresponds to a string (<code>PP_VARTYPE_STRING)</code> or may be
+   * undefined (<code>PP_VARTYPE_UNDEFINED</code>; default).
+   * Set it to a string to set a custom referrer (if empty, the referrer header
+   * will be omitted), or to undefined to use the default referrer. Only loaders
+   * with universal access (only available on trusted implementations) will
+   * accept <code>URLRequestInfo</code> objects that try to set a custom
+   * referrer; if given to a loader without universal access,
+   * <code>PP_ERROR_NOACCESS</code> will result.
+   */
+  PP_URLREQUESTPROPERTY_CUSTOMREFERRERURL = 7,
+  /**
+   * This corresponds to a <code>PP_Bool</code> (<code>PP_VARTYPE_BOOL</code>;
+   * default=<code>PP_FALSE</code>). Whether cross-origin requests are allowed.
+   * Cross-origin requests are made using the CORS (Cross-Origin Resource
+   * Sharing) algorithm to check whether the request should be allowed. For the
+   * complete CORS algorithm, refer to
+   * the <a href="http://www.w3.org/TR/access-control">Cross-Origin Resource
+   * Sharing</a> documentation.
+   */
+  PP_URLREQUESTPROPERTY_ALLOWCROSSORIGINREQUESTS = 8,
+  /**
+   * This corresponds to a <code>PP_Bool</code> (<code>PP_VARTYPE_BOOL</code>;
+   * default=<code>PP_FALSE</code>).
+   * Whether HTTP credentials are sent with cross-origin requests. If false,
+   * no credentials are sent with the request and cookies are ignored in the
+   * response. If the request is not cross-origin, this property is ignored.
+   */
+  PP_URLREQUESTPROPERTY_ALLOWCREDENTIALS = 9,
+  /**
+   * This corresponds to a string (<code>PP_VARTYPE_STRING</code>) or may be
+   * undefined (<code>PP_VARTYPE_UNDEFINED</code>; default).
+   * Set it to a string to set a custom content-transfer-encoding header (if
+   * empty, that header will be omitted), or to undefined to use the default
+   * (if any). Only loaders with universal access (only available on trusted
+   * implementations) will accept <code>URLRequestInfo</code> objects that try
+   * to set a custom content transfer encoding; if given to a loader without
+   * universal access, <code>PP_ERROR_NOACCESS</code> will result.
+   */
+  PP_URLREQUESTPROPERTY_CUSTOMCONTENTTRANSFERENCODING = 10,
+  /**
+   * This corresponds to an integer (<code>PP_VARTYPE_INT32</code>); default
+   * is not defined and is set by the browser, possibly depending on system
+   * capabilities. Set it to an integer to set an upper threshold for the
+   * prefetched buffer of an asynchronous load. When exceeded, the browser will
+   * defer loading until
+   * <code>PP_URLREQUESTPROPERTY_PREFETCHBUFFERLOWERERTHRESHOLD</code> is hit,
+   * at which time it will begin prefetching again. When setting this property,
+   * <code>PP_URLREQUESTPROPERTY_PREFETCHBUFFERLOWERERTHRESHOLD</code> must also
+   * be set. Behavior is undefined if the former is <= the latter.
+   */
+  PP_URLREQUESTPROPERTY_PREFETCHBUFFERUPPERTHRESHOLD = 11,
+  /**
+   * This corresponds to an integer (<code>PP_VARTYPE_INT32</code>); default is
+   * not defined and is set by the browser to a value appropriate for the
+   * default <code>PP_URLREQUESTPROPERTY_PREFETCHBUFFERUPPERTHRESHOLD</code>.
+   * Set it to an integer to set a lower threshold for the prefetched buffer
+   * of an asynchronous load. When reached, the browser will resume loading if
+   * If <code>PP_URLREQUESTPROPERTY_PREFETCHBUFFERLOWERERTHRESHOLD</code> had
+   * previously been reached.
+   * When setting this property,
+   * <code>PP_URLREQUESTPROPERTY_PREFETCHBUFFERUPPERTHRESHOLD</code> must also
+   * be set. Behavior is undefined if the former is >= the latter.
+   */
+  PP_URLREQUESTPROPERTY_PREFETCHBUFFERLOWERTHRESHOLD = 12,
+  /**
+   * This corresponds to a string (<code>PP_VARTYPE_STRING</code>) or may be
+   * undefined (<code>PP_VARTYPE_UNDEFINED</code>; default). Set it to a string
+   * to set a custom user-agent header (if empty, that header will be omitted),
+   * or to undefined to use the default. Only loaders with universal access
+   * (only available on trusted implementations) will accept
+   * <code>URLRequestInfo</code> objects that try to set a custom user agent; if
+   * given to a loader without universal access, <code>PP_ERROR_NOACCESS</code>
+   * will result.
+   */
+  PP_URLREQUESTPROPERTY_CUSTOMUSERAGENT = 13
+} PP_URLRequestProperty;
+PP_COMPILE_ASSERT_SIZE_IN_BYTES(PP_URLRequestProperty, 4);
+/**
+ * @}
+ */
+
+/**
+ * @addtogroup Interfaces
+ * @{
+ */
+/**
+ * The <code>PPB_URLRequestInfo</code> interface is used to create
+ * and handle URL requests. This API is used in conjunction with
+ * <code>PPB_URLLoader</code>. Refer to <code>PPB_URLLoader</code> for further
+ * information.
+ */
+struct PPB_URLRequestInfo_1_0 {
+  /**
+   * Create() creates a new <code>URLRequestInfo</code> object.
+   *
+   * @param[in] instance A <code>PP_Instance</code> identifying one instance
+   * of a module.
+   *
+   * @return A <code>PP_Resource</code> identifying the
+   * <code>URLRequestInfo</code> if successful, 0 if the instance is invalid.
+   */
+  PP_Resource (*Create)(PP_Instance instance);
+  /**
+   * IsURLRequestInfo() determines if a resource is a
+   * <code>URLRequestInfo</code>.
+   *
+   * @param[in] resource A <code>PP_Resource</code> corresponding to a
+   * <code>URLRequestInfo</code>.
+   *
+   * @return <code>PP_TRUE</code> if the resource is a
+   * <code>URLRequestInfo</code>, <code>PP_FALSE</code> if the resource is
+   * invalid or some type other than <code>URLRequestInfo</code>.
+   */
+  PP_Bool (*IsURLRequestInfo)(PP_Resource resource);
+  /**
+   * SetProperty() sets a request property. The value of the property must be
+   * the correct type according to the property being set.
+   *
+   * @param[in] request A <code>PP_Resource</code> corresponding to a
+   * <code>URLRequestInfo</code>.
+   * @param[in] property A <code>PP_URLRequestProperty</code> identifying the
+   * property to set.
+   * @param[in] value A <code>PP_Var</code> containing the property value.
+   *
+   * @return <code>PP_TRUE</code> if successful, <code>PP_FALSE</code> if any
+   * of the parameters are invalid.
+   */
+  PP_Bool (*SetProperty)(PP_Resource request,
+                         PP_URLRequestProperty property,
+                         struct PP_Var value);
+  /**
+   * AppendDataToBody() appends data to the request body. A Content-Length
+   * request header will be automatically generated.
+   *
+   * @param[in] request A <code>PP_Resource</code> corresponding to a
+   * <code>URLRequestInfo</code>.
+   * @param[in] data A pointer to a buffer holding the data.
+   * @param[in] len The length, in bytes, of the data.
+   *
+   * @return <code>PP_TRUE</code> if successful, <code>PP_FALSE</code> if any
+   * of the parameters are invalid.
+   *
+   *
+   */
+  PP_Bool (*AppendDataToBody)(PP_Resource request,
+                              const void* data,
+                              uint32_t len);
+  /**
+   * AppendFileToBody() appends a file, to be uploaded, to the request body.
+   * A content-length request header will be automatically generated.
+   *
+   * @param[in] request A <code>PP_Resource</code> corresponding to a
+   * <code>URLRequestInfo</code>.
+   * @param[in] file_ref A <code>PP_Resource</code> corresponding to a file
+   * reference.
+   * @param[in] start_offset An optional starting point offset within the
+   * file.
+   * @param[in] number_of_bytes An optional number of bytes of the file to
+   * be included. If <code>number_of_bytes</code> is -1, then the sub-range
+   * to upload extends to the end of the file.
+   * @param[in] expected_last_modified_time An optional (non-zero) last
+   * modified time stamp used to validate that the file was not modified since
+   * the given time before it was uploaded. The upload will fail with an error
+   * code of <code>PP_ERROR_FILECHANGED</code> if the file has been modified
+   * since the given time. If <code>expected_last_modified_time</code> is 0,
+   * then no validation is performed.
+   *
+   * @return <code>PP_TRUE</code> if successful, <code>PP_FALSE</code> if any
+   * of the parameters are invalid.
+   */
+  PP_Bool (*AppendFileToBody)(PP_Resource request,
+                              PP_Resource file_ref,
+                              int64_t start_offset,
+                              int64_t number_of_bytes,
+                              PP_Time expected_last_modified_time);
+};
+
+typedef struct PPB_URLRequestInfo_1_0 PPB_URLRequestInfo;
+/**
+ * @}
+ */
+
+#endif  /* PPAPI_C_PPB_URL_REQUEST_INFO_H_ */
+
+
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file    stm32f3xx_it.c
+  * @brief   Interrupt Service Routines.
+  ******************************************************************************
+  * @attention
+  *
+  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * All rights reserved.</center></h2>
+  *
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "stm32f3xx_it.h"
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN TD */
+
+/* USER CODE END TD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+/* USER CODE BEGIN PV */
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+/* USER CODE BEGIN PFP */
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/* External variables --------------------------------------------------------*/
+
+/* USER CODE BEGIN EV */
+
+/* USER CODE END EV */
+
+/******************************************************************************/
+/*           Cortex-M4 Processor Interruption and Exception Handlers          */
+/******************************************************************************/
+/**
+  * @brief This function handles Non maskable interrupt.
+  */
+void NMI_Handler(void)
+{
+  /* USER CODE BEGIN NonMaskableInt_IRQn 0 */
+
+  /* USER CODE END NonMaskableInt_IRQn 0 */
+  /* USER CODE BEGIN NonMaskableInt_IRQn 1 */
+
+  /* USER CODE END NonMaskableInt_IRQn 1 */
+}
+
+/**
+  * @brief This function handles Hard fault interrupt.
+  */
+void HardFault_Handler(void)
+{
+  /* USER CODE BEGIN HardFault_IRQn 0 */
+
+  /* USER CODE END HardFault_IRQn 0 */
+  while (1)
+  {
+    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
+    /* USER CODE END W1_HardFault_IRQn 0 */
+  }
+}
+
+/**
+  * @brief This function handles Memory management fault.
+  */
+void MemManage_Handler(void)
+{
+  /* USER CODE BEGIN MemoryManagement_IRQn 0 */
+
+  /* USER CODE END MemoryManagement_IRQn 0 */
+  while (1)
+  {
+    /* USER CODE BEGIN W1_MemoryManagement_IRQn 0 */
+    /* USER CODE END W1_MemoryManagement_IRQn 0 */
+  }
+}
+
+/**
+  * @brief This function handles Pre-fetch fault, memory access fault.
+  */
+void BusFault_Handler(void)
+{
+  /* USER CODE BEGIN BusFault_IRQn 0 */
+
+  /* USER CODE END BusFault_IRQn 0 */
+  while (1)
+  {
+    /* USER CODE BEGIN W1_BusFault_IRQn 0 */
+    /* USER CODE END W1_BusFault_IRQn 0 */
+  }
+}
+
+/**
+  * @brief This function handles Undefined instruction or illegal state.
+  */
+void UsageFault_Handler(void)
+{
+  /* USER CODE BEGIN UsageFault_IRQn 0 */
+
+  /* USER CODE END UsageFault_IRQn 0 */
+  while (1)
+  {
+    /* USER CODE BEGIN W1_UsageFault_IRQn 0 */
+    /* USER CODE END W1_UsageFault_IRQn 0 */
+  }
+}
+
+/**
+  * @brief This function handles System service call via SWI instruction.
+  */
+void SVC_Handler(void)
+{
+  /* USER CODE BEGIN SVCall_IRQn 0 */
+
+  /* USER CODE END SVCall_IRQn 0 */
+  /* USER CODE BEGIN SVCall_IRQn 1 */
+
+  /* USER CODE END SVCall_IRQn 1 */
+}
+
+/**
+  * @brief This function handles Debug monitor.
+  */
+void DebugMon_Handler(void)
+{
+  /* USER CODE BEGIN DebugMonitor_IRQn 0 */
+
+  /* USER CODE END DebugMonitor_IRQn 0 */
+  /* USER CODE BEGIN DebugMonitor_IRQn 1 */
+
+  /* USER CODE END DebugMonitor_IRQn 1 */
+}
+
+/**
+  * @brief This function handles Pendable request for system service.
+  */
+void PendSV_Handler(void)
+{
+  /* USER CODE BEGIN PendSV_IRQn 0 */
+
+  /* USER CODE END PendSV_IRQn 0 */
+  /* USER CODE BEGIN PendSV_IRQn 1 */
+
+  /* USER CODE END PendSV_IRQn 1 */
+}
+
+/**
+  * @brief This function handles System tick timer.
+  */
+void SysTick_Handler(void)
+{
+  /* USER CODE BEGIN SysTick_IRQn 0 */
+
+  /* USER CODE END SysTick_IRQn 0 */
+  HAL_IncTick();
+  /* USER CODE BEGIN SysTick_IRQn 1 */
+
+  /* USER CODE END SysTick_IRQn 1 */
+}
+
+/******************************************************************************/
+/* STM32F3xx Peripheral Interrupt Handlers                                    */
+/* Add here the Interrupt Handlers for the used peripherals.                  */
+/* For the available peripheral interrupt handler names,                      */
+/* please refer to the startup file (startup_stm32f3xx.s).                    */
+/******************************************************************************/
+
+/* USER CODE BEGIN 1 */
+
+/* USER CODE END 1 */
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+// Copyright 2012 Google Inc. All Rights Reserved.
+//
+// This code is licensed under the same terms as WebM:
+//  Software License Agreement:  http://www.webmproject.org/license/software/
+//  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
+// -----------------------------------------------------------------------------
+//
+// Utilities for building and looking up Huffman trees.
+//
+// Author: Urvang Joshi (urvang@google.com)
+
+#include <assert.h>
+#include <stdlib.h>
+#include "./huffman.h"
+#include "../utils/utils.h"
+#include "../webp/format_constants.h"
+
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
+
+#define NON_EXISTENT_SYMBOL (-1)
+
+static void TreeNodeInit(HuffmanTreeNode* const node) {
+  node->children_ = -1;   // means: 'unassigned so far'
+}
+
+static int NodeIsEmpty(const HuffmanTreeNode* const node) {
+  return (node->children_ < 0);
+}
+
+static int IsFull(const HuffmanTree* const tree) {
+  return (tree->num_nodes_ == tree->max_nodes_);
+}
+
+static void AssignChildren(HuffmanTree* const tree,
+                           HuffmanTreeNode* const node) {
+  HuffmanTreeNode* const children = tree->root_ + tree->num_nodes_;
+  node->children_ = (int)(children - node);
+  assert(children - node == (int)(children - node));
+  tree->num_nodes_ += 2;
+  TreeNodeInit(children + 0);
+  TreeNodeInit(children + 1);
+}
+
+static int TreeInit(HuffmanTree* const tree, int num_leaves) {
+  assert(tree != NULL);
+  if (num_leaves == 0) return 0;
+  // We allocate maximum possible nodes in the tree at once.
+  // Note that a Huffman tree is a full binary tree; and in a full binary tree
+  // with L leaves, the total number of nodes N = 2 * L - 1.
+  tree->max_nodes_ = 2 * num_leaves - 1;
+  tree->root_ = (HuffmanTreeNode*)WebPSafeMalloc((uint64_t)tree->max_nodes_,
+                                                 sizeof(*tree->root_));
+  if (tree->root_ == NULL) return 0;
+  TreeNodeInit(tree->root_);  // Initialize root.
+  tree->num_nodes_ = 1;
+  return 1;
+}
+
+void HuffmanTreeRelease(HuffmanTree* const tree) {
+  if (tree != NULL) {
+    free(tree->root_);
+    tree->root_ = NULL;
+    tree->max_nodes_ = 0;
+    tree->num_nodes_ = 0;
+  }
+}
+
+int HuffmanCodeLengthsToCodes(const int* const code_lengths,
+                              int code_lengths_size, int* const huff_codes) {
+  int symbol;
+  int code_len;
+  int code_length_hist[MAX_ALLOWED_CODE_LENGTH + 1] = { 0 };
+  int curr_code;
+  int next_codes[MAX_ALLOWED_CODE_LENGTH + 1] = { 0 };
+  int max_code_length = 0;
+
+  assert(code_lengths != NULL);
+  assert(code_lengths_size > 0);
+  assert(huff_codes != NULL);
+
+  // Calculate max code length.
+  for (symbol = 0; symbol < code_lengths_size; ++symbol) {
+    if (code_lengths[symbol] > max_code_length) {
+      max_code_length = code_lengths[symbol];
+    }
+  }
+  if (max_code_length > MAX_ALLOWED_CODE_LENGTH) return 0;
+
+  // Calculate code length histogram.
+  for (symbol = 0; symbol < code_lengths_size; ++symbol) {
+    ++code_length_hist[code_lengths[symbol]];
+  }
+  code_length_hist[0] = 0;
+
+  // Calculate the initial values of 'next_codes' for each code length.
+  // next_codes[code_len] denotes the code to be assigned to the next symbol
+  // of code length 'code_len'.
+  curr_code = 0;
+  next_codes[0] = -1;  // Unused, as code length = 0 implies code doesn't exist.
+  for (code_len = 1; code_len <= max_code_length; ++code_len) {
+    curr_code = (curr_code + code_length_hist[code_len - 1]) << 1;
+    next_codes[code_len] = curr_code;
+  }
+
+  // Get symbols.
+  for (symbol = 0; symbol < code_lengths_size; ++symbol) {
+    if (code_lengths[symbol] > 0) {
+      huff_codes[symbol] = next_codes[code_lengths[symbol]]++;
+    } else {
+      huff_codes[symbol] = NON_EXISTENT_SYMBOL;
+    }
+  }
+  return 1;
+}
+
+static int TreeAddSymbol(HuffmanTree* const tree,
+                         int symbol, int code, int code_length) {
+  HuffmanTreeNode* node = tree->root_;
+  const HuffmanTreeNode* const max_node = tree->root_ + tree->max_nodes_;
+  while (code_length-- > 0) {
+    if (node >= max_node) {
+      return 0;
+    }
+    if (NodeIsEmpty(node)) {
+      if (IsFull(tree)) return 0;    // error: too many symbols.
+      AssignChildren(tree, node);
+    } else if (HuffmanTreeNodeIsLeaf(node)) {
+      return 0;  // leaf is already occupied.
+    }
+    node += node->children_ + ((code >> code_length) & 1);
+  }
+  if (NodeIsEmpty(node)) {
+    node->children_ = 0;      // turn newly created node into a leaf.
+  } else if (!HuffmanTreeNodeIsLeaf(node)) {
+    return 0;   // trying to assign a symbol to already used code.
+  }
+  node->symbol_ = symbol;  // Add symbol in this node.
+  return 1;
+}
+
+int HuffmanTreeBuildImplicit(HuffmanTree* const tree,
+                             const int* const code_lengths,
+                             int code_lengths_size) {
+  int symbol;
+  int num_symbols = 0;
+  int root_symbol = 0;
+
+  assert(tree != NULL);
+  assert(code_lengths != NULL);
+
+  // Find out number of symbols and the root symbol.
+  for (symbol = 0; symbol < code_lengths_size; ++symbol) {
+    if (code_lengths[symbol] > 0) {
+      // Note: code length = 0 indicates non-existent symbol.
+      ++num_symbols;
+      root_symbol = symbol;
+    }
+  }
+
+  // Initialize the tree. Will fail for num_symbols = 0
+  if (!TreeInit(tree, num_symbols)) return 0;
+
+  // Build tree.
+  if (num_symbols == 1) {  // Trivial case.
+    const int max_symbol = code_lengths_size;
+    if (root_symbol < 0 || root_symbol >= max_symbol) {
+      HuffmanTreeRelease(tree);
+      return 0;
+    }
+    return TreeAddSymbol(tree, root_symbol, 0, 0);
+  } else {  // Normal case.
+    int ok = 0;
+
+    // Get Huffman codes from the code lengths.
+    int* const codes =
+        (int*)WebPSafeMalloc((uint64_t)code_lengths_size, sizeof(*codes));
+    if (codes == NULL) goto End;
+
+    if (!HuffmanCodeLengthsToCodes(code_lengths, code_lengths_size, codes)) {
+      goto End;
+    }
+
+    // Add symbols one-by-one.
+    for (symbol = 0; symbol < code_lengths_size; ++symbol) {
+      if (code_lengths[symbol] > 0) {
+        if (!TreeAddSymbol(tree, symbol, codes[symbol], code_lengths[symbol])) {
+          goto End;
+        }
+      }
+    }
+    ok = 1;
+ End:
+    free(codes);
+    ok = ok && IsFull(tree);
+    if (!ok) HuffmanTreeRelease(tree);
+    return ok;
+  }
+}
+
+int HuffmanTreeBuildExplicit(HuffmanTree* const tree,
+                             const int* const code_lengths,
+                             const int* const codes,
+                             const int* const symbols, int max_symbol,
+                             int num_symbols) {
+  int ok = 0;
+  int i;
+
+  assert(tree != NULL);
+  assert(code_lengths != NULL);
+  assert(codes != NULL);
+  assert(symbols != NULL);
+
+  // Initialize the tree. Will fail if num_symbols = 0.
+  if (!TreeInit(tree, num_symbols)) return 0;
+
+  // Add symbols one-by-one.
+  for (i = 0; i < num_symbols; ++i) {
+    if (codes[i] != NON_EXISTENT_SYMBOL) {
+      if (symbols[i] < 0 || symbols[i] >= max_symbol) {
+        goto End;
+      }
+      if (!TreeAddSymbol(tree, symbols[i], codes[i], code_lengths[i])) {
+        goto End;
+      }
+    }
+  }
+  ok = 1;
+ End:
+  ok = ok && IsFull(tree);
+  if (!ok) HuffmanTreeRelease(tree);
+  return ok;
+}
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}    // extern "C"
+#endif
+
+/*
+ * Copyright (C) 2014 Freescale Semiconductor
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+#include "qbman_portal.h"
+
+/* QBMan portal management command codes */
+#define QBMAN_MC_ACQUIRE       0x30
+#define QBMAN_WQCHAN_CONFIGURE 0x46
+
+/* CINH register offsets */
+#define QBMAN_CINH_SWP_EQAR    0x8c0
+#define QBMAN_CINH_SWP_DCAP    0xac0
+#define QBMAN_CINH_SWP_SDQCR   0xb00
+#define QBMAN_CINH_SWP_RAR     0xcc0
+
+/* CENA register offsets */
+#define QBMAN_CENA_SWP_EQCR(n) (0x000 + ((uint32_t)(n) << 6))
+#define QBMAN_CENA_SWP_DQRR(n) (0x200 + ((uint32_t)(n) << 6))
+#define QBMAN_CENA_SWP_RCR(n)  (0x400 + ((uint32_t)(n) << 6))
+#define QBMAN_CENA_SWP_CR      0x600
+#define QBMAN_CENA_SWP_RR(vb)  (0x700 + ((uint32_t)(vb) >> 1))
+#define QBMAN_CENA_SWP_VDQCR   0x780
+
+/* Reverse mapping of QBMAN_CENA_SWP_DQRR() */
+#define QBMAN_IDX_FROM_DQRR(p) (((unsigned long)p & 0x1ff) >> 6)
+
+/*******************************/
+/* Pre-defined attribute codes */
+/*******************************/
+
+struct qb_attr_code code_generic_verb = QB_CODE(0, 0, 7);
+struct qb_attr_code code_generic_rslt = QB_CODE(0, 8, 8);
+
+/*************************/
+/* SDQCR attribute codes */
+/*************************/
+
+/* we put these here because at least some of them are required by
+ * qbman_swp_init() */
+struct qb_attr_code code_sdqcr_dct = QB_CODE(0, 24, 2);
+struct qb_attr_code code_sdqcr_fc = QB_CODE(0, 29, 1);
+struct qb_attr_code code_sdqcr_tok = QB_CODE(0, 16, 8);
+#define CODE_SDQCR_DQSRC(n) QB_CODE(0, n, 1)
+enum qbman_sdqcr_dct {
+	qbman_sdqcr_dct_null = 0,
+	qbman_sdqcr_dct_prio_ics,
+	qbman_sdqcr_dct_active_ics,
+	qbman_sdqcr_dct_active
+};
+enum qbman_sdqcr_fc {
+	qbman_sdqcr_fc_one = 0,
+	qbman_sdqcr_fc_up_to_3 = 1
+};
+
+/*********************************/
+/* Portal constructor/destructor */
+/*********************************/
+
+/* Software portals should always be in the power-on state when we initialise,
+ * due to the CCSR-based portal reset functionality that MC has. */
+struct qbman_swp *qbman_swp_init(const struct qbman_swp_desc *d)
+{
+	int ret;
+	struct qbman_swp *p = malloc(sizeof(struct qbman_swp));
+	u32 major = 0, minor = 0;
+
+	if (!p)
+		return NULL;
+	p->desc = d;
+#ifdef QBMAN_CHECKING
+	p->mc.check = swp_mc_can_start;
+#endif
+	p->mc.valid_bit = QB_VALID_BIT;
+	p->sdq = 0;
+	qb_attr_code_encode(&code_sdqcr_dct, &p->sdq, qbman_sdqcr_dct_prio_ics);
+	qb_attr_code_encode(&code_sdqcr_fc, &p->sdq, qbman_sdqcr_fc_up_to_3);
+	qb_attr_code_encode(&code_sdqcr_tok, &p->sdq, 0xbb);
+	atomic_set(&p->vdq.busy, 1);
+	p->vdq.valid_bit = QB_VALID_BIT;
+	p->dqrr.next_idx = 0;
+
+	qbman_version(&major, &minor);
+	if (!major) {
+		printf("invalid qbman version\n");
+		return NULL;
+	}
+
+	if (major >= 4 && minor >= 1)
+		p->dqrr.dqrr_size = QBMAN_VER_4_1_DQRR_SIZE;
+	else
+		p->dqrr.dqrr_size = QBMAN_VER_4_0_DQRR_SIZE;
+
+	p->dqrr.valid_bit = QB_VALID_BIT;
+	ret = qbman_swp_sys_init(&p->sys, d, p->dqrr.dqrr_size);
+	if (ret) {
+		free(p);
+		printf("qbman_swp_sys_init() failed %d\n", ret);
+		return NULL;
+	}
+	qbman_cinh_write(&p->sys, QBMAN_CINH_SWP_SDQCR, p->sdq);
+	return p;
+}
+
+/***********************/
+/* Management commands */
+/***********************/
+
+/*
+ * Internal code common to all types of management commands.
+ */
+
+void *qbman_swp_mc_start(struct qbman_swp *p)
+{
+	void *ret;
+	int *return_val;
+#ifdef QBMAN_CHECKING
+	BUG_ON(p->mc.check != swp_mc_can_start);
+#endif
+	ret = qbman_cena_write_start(&p->sys, QBMAN_CENA_SWP_CR);
+#ifdef QBMAN_CHECKING
+	return_val = (int *)ret;
+	if (!(*return_val))
+		p->mc.check = swp_mc_can_submit;
+#endif
+	return ret;
+}
+
+void qbman_swp_mc_submit(struct qbman_swp *p, void *cmd, uint32_t cmd_verb)
+{
+	uint32_t *v = cmd;
+#ifdef QBMAN_CHECKING
+	BUG_ON(p->mc.check != swp_mc_can_submit);
+#endif
+	lwsync();
+	/* TBD: "|=" is going to hurt performance. Need to move as many fields
+	 * out of word zero, and for those that remain, the "OR" needs to occur
+	 * at the caller side. This debug check helps to catch cases where the
+	 * caller wants to OR but has forgotten to do so. */
+	BUG_ON((*v & cmd_verb) != *v);
+	*v = cmd_verb | p->mc.valid_bit;
+	qbman_cena_write_complete(&p->sys, QBMAN_CENA_SWP_CR, cmd);
+	/* TODO: add prefetch support for GPP */
+#ifdef QBMAN_CHECKING
+	p->mc.check = swp_mc_can_poll;
+#endif
+}
+
+void *qbman_swp_mc_result(struct qbman_swp *p)
+{
+	uint32_t *ret, verb;
+#ifdef QBMAN_CHECKING
+	BUG_ON(p->mc.check != swp_mc_can_poll);
+#endif
+	ret = qbman_cena_read(&p->sys, QBMAN_CENA_SWP_RR(p->mc.valid_bit));
+	/* Remove the valid-bit - command completed iff the rest is non-zero */
+	verb = ret[0] & ~QB_VALID_BIT;
+	if (!verb)
+		return NULL;
+#ifdef QBMAN_CHECKING
+	p->mc.check = swp_mc_can_start;
+#endif
+	p->mc.valid_bit ^= QB_VALID_BIT;
+	return ret;
+}
+
+/***********/
+/* Enqueue */
+/***********/
+
+/* These should be const, eventually */
+static struct qb_attr_code code_eq_cmd = QB_CODE(0, 0, 2);
+static struct qb_attr_code code_eq_orp_en = QB_CODE(0, 2, 1);
+static struct qb_attr_code code_eq_tgt_id = QB_CODE(2, 0, 24);
+/* static struct qb_attr_code code_eq_tag = QB_CODE(3, 0, 32); */
+static struct qb_attr_code code_eq_qd_en = QB_CODE(0, 4, 1);
+static struct qb_attr_code code_eq_qd_bin = QB_CODE(4, 0, 16);
+static struct qb_attr_code code_eq_qd_pri = QB_CODE(4, 16, 4);
+static struct qb_attr_code code_eq_rsp_stash = QB_CODE(5, 16, 1);
+static struct qb_attr_code code_eq_rsp_lo = QB_CODE(6, 0, 32);
+
+enum qbman_eq_cmd_e {
+	/* No enqueue, primarily for plugging ORP gaps for dropped frames */
+	qbman_eq_cmd_empty,
+	/* DMA an enqueue response once complete */
+	qbman_eq_cmd_respond,
+	/* DMA an enqueue response only if the enqueue fails */
+	qbman_eq_cmd_respond_reject
+};
+
+void qbman_eq_desc_clear(struct qbman_eq_desc *d)
+{
+	memset(d, 0, sizeof(*d));
+}
+
+void qbman_eq_desc_set_no_orp(struct qbman_eq_desc *d, int respond_success)
+{
+	uint32_t *cl = qb_cl(d);
+
+	qb_attr_code_encode(&code_eq_orp_en, cl, 0);
+	qb_attr_code_encode(&code_eq_cmd, cl,
+			    respond_success ? qbman_eq_cmd_respond :
+					      qbman_eq_cmd_respond_reject);
+}
+
+void qbman_eq_desc_set_response(struct qbman_eq_desc *d,
+				dma_addr_t storage_phys,
+				int stash)
+{
+	uint32_t *cl = qb_cl(d);
+
+	qb_attr_code_encode_64(&code_eq_rsp_lo, (uint64_t *)cl, storage_phys);
+	qb_attr_code_encode(&code_eq_rsp_stash, cl, !!stash);
+}
+
+
+void qbman_eq_desc_set_qd(struct qbman_eq_desc *d, uint32_t qdid,
+			  uint32_t qd_bin, uint32_t qd_prio)
+{
+	uint32_t *cl = qb_cl(d);
+
+	qb_attr_code_encode(&code_eq_qd_en, cl, 1);
+	qb_attr_code_encode(&code_eq_tgt_id, cl, qdid);
+	qb_attr_code_encode(&code_eq_qd_bin, cl, qd_bin);
+	qb_attr_code_encode(&code_eq_qd_pri, cl, qd_prio);
+}
+
+#define EQAR_IDX(eqar)     ((eqar) & 0x7)
+#define EQAR_VB(eqar)      ((eqar) & 0x80)
+#define EQAR_SUCCESS(eqar) ((eqar) & 0x100)
+
+int qbman_swp_enqueue(struct qbman_swp *s, const struct qbman_eq_desc *d,
+		      const struct qbman_fd *fd)
+{
+	uint32_t *p;
+	const uint32_t *cl = qb_cl(d);
+	uint32_t eqar = qbman_cinh_read(&s->sys, QBMAN_CINH_SWP_EQAR);
+	debug("EQAR=%08x\n", eqar);
+	if (!EQAR_SUCCESS(eqar))
+		return -EBUSY;
+	p = qbman_cena_write_start(&s->sys,
+				   QBMAN_CENA_SWP_EQCR(EQAR_IDX(eqar)));
+	word_copy(&p[1], &cl[1], 7);
+	word_copy(&p[8], fd, sizeof(*fd) >> 2);
+	lwsync();
+	/* Set the verb byte, have to substitute in the valid-bit */
+	p[0] = cl[0] | EQAR_VB(eqar);
+	qbman_cena_write_complete(&s->sys,
+				  QBMAN_CENA_SWP_EQCR(EQAR_IDX(eqar)),
+				  p);
+	return 0;
+}
+
+/***************************/
+/* Volatile (pull) dequeue */
+/***************************/
+
+/* These should be const, eventually */
+static struct qb_attr_code code_pull_dct = QB_CODE(0, 0, 2);
+static struct qb_attr_code code_pull_dt = QB_CODE(0, 2, 2);
+static struct qb_attr_code code_pull_rls = QB_CODE(0, 4, 1);
+static struct qb_attr_code code_pull_stash = QB_CODE(0, 5, 1);
+static struct qb_attr_code code_pull_numframes = QB_CODE(0, 8, 4);
+static struct qb_attr_code code_pull_token = QB_CODE(0, 16, 8);
+static struct qb_attr_code code_pull_dqsource = QB_CODE(1, 0, 24);
+static struct qb_attr_code code_pull_rsp_lo = QB_CODE(2, 0, 32);
+
+enum qb_pull_dt_e {
+	qb_pull_dt_channel,
+	qb_pull_dt_workqueue,
+	qb_pull_dt_framequeue
+};
+
+void qbman_pull_desc_clear(struct qbman_pull_desc *d)
+{
+	memset(d, 0, sizeof(*d));
+}
+
+void qbman_pull_desc_set_storage(struct qbman_pull_desc *d,
+				 struct ldpaa_dq *storage,
+				 dma_addr_t storage_phys,
+				 int stash)
+{
+	uint32_t *cl = qb_cl(d);
+
+	/* Squiggle the pointer 'storage' into the extra 2 words of the
+	 * descriptor (which aren't copied to the hw command) */
+	*(void **)&cl[4] = storage;
+	if (!storage) {
+		qb_attr_code_encode(&code_pull_rls, cl, 0);
+		return;
+	}
+	qb_attr_code_encode(&code_pull_rls, cl, 1);
+	qb_attr_code_encode(&code_pull_stash, cl, !!stash);
+	qb_attr_code_encode_64(&code_pull_rsp_lo, (uint64_t *)cl, storage_phys);
+}
+
+void qbman_pull_desc_set_numframes(struct qbman_pull_desc *d, uint8_t numframes)
+{
+	uint32_t *cl = qb_cl(d);
+
+	BUG_ON(!numframes || (numframes > 16));
+	qb_attr_code_encode(&code_pull_numframes, cl,
+			    (uint32_t)(numframes - 1));
+}
+
+void qbman_pull_desc_set_token(struct qbman_pull_desc *d, uint8_t token)
+{
+	uint32_t *cl = qb_cl(d);
+
+	qb_attr_code_encode(&code_pull_token, cl, token);
+}
+
+void qbman_pull_desc_set_fq(struct qbman_pull_desc *d, uint32_t fqid)
+{
+	uint32_t *cl = qb_cl(d);
+
+	qb_attr_code_encode(&code_pull_dct, cl, 1);
+	qb_attr_code_encode(&code_pull_dt, cl, qb_pull_dt_framequeue);
+	qb_attr_code_encode(&code_pull_dqsource, cl, fqid);
+}
+
+int qbman_swp_pull(struct qbman_swp *s, struct qbman_pull_desc *d)
+{
+	uint32_t *p;
+	uint32_t *cl = qb_cl(d);
+
+	if (!atomic_dec_and_test(&s->vdq.busy)) {
+		atomic_inc(&s->vdq.busy);
+		return -EBUSY;
+	}
+	s->vdq.storage = *(void **)&cl[4];
+	s->vdq.token = qb_attr_code_decode(&code_pull_token, cl);
+	p = qbman_cena_write_start(&s->sys, QBMAN_CENA_SWP_VDQCR);
+	word_copy(&p[1], &cl[1], 3);
+	lwsync();
+	/* Set the verb byte, have to substitute in the valid-bit */
+	p[0] = cl[0] | s->vdq.valid_bit;
+	s->vdq.valid_bit ^= QB_VALID_BIT;
+	qbman_cena_write_complete(&s->sys, QBMAN_CENA_SWP_VDQCR, p);
+	return 0;
+}
+
+/****************/
+/* Polling DQRR */
+/****************/
+
+static struct qb_attr_code code_dqrr_verb = QB_CODE(0, 0, 8);
+static struct qb_attr_code code_dqrr_response = QB_CODE(0, 0, 7);
+static struct qb_attr_code code_dqrr_stat = QB_CODE(0, 8, 8);
+
+#define QBMAN_DQRR_RESPONSE_DQ        0x60
+#define QBMAN_DQRR_RESPONSE_FQRN      0x21
+#define QBMAN_DQRR_RESPONSE_FQRNI     0x22
+#define QBMAN_DQRR_RESPONSE_FQPN      0x24
+#define QBMAN_DQRR_RESPONSE_FQDAN     0x25
+#define QBMAN_DQRR_RESPONSE_CDAN      0x26
+#define QBMAN_DQRR_RESPONSE_CSCN_MEM  0x27
+#define QBMAN_DQRR_RESPONSE_CGCU      0x28
+#define QBMAN_DQRR_RESPONSE_BPSCN     0x29
+#define QBMAN_DQRR_RESPONSE_CSCN_WQ   0x2a
+
+
+/* NULL return if there are no unconsumed DQRR entries. Returns a DQRR entry
+ * only once, so repeated calls can return a sequence of DQRR entries, without
+ * requiring they be consumed immediately or in any particular order. */
+const struct ldpaa_dq *qbman_swp_dqrr_next(struct qbman_swp *s)
+{
+	uint32_t verb;
+	uint32_t response_verb;
+	uint32_t flags;
+	const struct ldpaa_dq *dq;
+	const uint32_t *p;
+
+	dq = qbman_cena_read(&s->sys, QBMAN_CENA_SWP_DQRR(s->dqrr.next_idx));
+	p = qb_cl(dq);
+	verb = qb_attr_code_decode(&code_dqrr_verb, p);
+
+	/* If the valid-bit isn't of the expected polarity, nothing there. Note,
+	 * in the DQRR reset bug workaround, we shouldn't need to skip these
+	 * check, because we've already determined that a new entry is available
+	 * and we've invalidated the cacheline before reading it, so the
+	 * valid-bit behaviour is repaired and should tell us what we already
+	 * knew from reading PI.
+	 */
+	if ((verb & QB_VALID_BIT) != s->dqrr.valid_bit) {
+		qbman_cena_invalidate_prefetch(&s->sys,
+					QBMAN_CENA_SWP_DQRR(s->dqrr.next_idx));
+		return NULL;
+	}
+	/* There's something there. Move "next_idx" attention to the next ring
+	 * entry (and prefetch it) before returning what we found. */
+	s->dqrr.next_idx++;
+	s->dqrr.next_idx &= s->dqrr.dqrr_size - 1;/* Wrap around at dqrr_size */
+	/* TODO: it's possible to do all this without conditionals, optimise it
+	 * later. */
+	if (!s->dqrr.next_idx)
+		s->dqrr.valid_bit ^= QB_VALID_BIT;
+
+	/* If this is the final response to a volatile dequeue command
+	   indicate that the vdq is no longer busy */
+	flags = ldpaa_dq_flags(dq);
+	response_verb = qb_attr_code_decode(&code_dqrr_response, &verb);
+	if ((response_verb == QBMAN_DQRR_RESPONSE_DQ) &&
+	    (flags & LDPAA_DQ_STAT_VOLATILE) &&
+	    (flags & LDPAA_DQ_STAT_EXPIRED))
+			atomic_inc(&s->vdq.busy);
+
+	qbman_cena_invalidate_prefetch(&s->sys,
+				       QBMAN_CENA_SWP_DQRR(s->dqrr.next_idx));
+	return dq;
+}
+
+/* Consume DQRR entries previously returned from qbman_swp_dqrr_next(). */
+void qbman_swp_dqrr_consume(struct qbman_swp *s, const struct ldpaa_dq *dq)
+{
+	qbman_cinh_write(&s->sys, QBMAN_CINH_SWP_DCAP, QBMAN_IDX_FROM_DQRR(dq));
+}
+
+/*********************************/
+/* Polling user-provided storage */
+/*********************************/
+
+void qbman_dq_entry_set_oldtoken(struct ldpaa_dq *dq,
+				 unsigned int num_entries,
+				 uint8_t oldtoken)
+{
+	memset(dq, oldtoken, num_entries * sizeof(*dq));
+}
+
+int qbman_dq_entry_has_newtoken(struct qbman_swp *s,
+				const struct ldpaa_dq *dq,
+				uint8_t newtoken)
+{
+	/* To avoid converting the little-endian DQ entry to host-endian prior
+	 * to us knowing whether there is a valid entry or not (and run the
+	 * risk of corrupting the incoming hardware LE write), we detect in
+	 * hardware endianness rather than host. This means we need a different
+	 * "code" depending on whether we are BE or LE in software, which is
+	 * where DQRR_TOK_OFFSET comes in... */
+	static struct qb_attr_code code_dqrr_tok_detect =
+					QB_CODE(0, DQRR_TOK_OFFSET, 8);
+	/* The user trying to poll for a result treats "dq" as const. It is
+	 * however the same address that was provided to us non-const in the
+	 * first place, for directing hardware DMA to. So we can cast away the
+	 * const because it is mutable from our perspective. */
+	uint32_t *p = qb_cl((struct ldpaa_dq *)dq);
+	uint32_t token;
+
+	token = qb_attr_code_decode(&code_dqrr_tok_detect, &p[1]);
+	if (token != newtoken)
+		return 0;
+
+	/* Only now do we convert from hardware to host endianness. Also, as we
+	 * are returning success, the user has promised not to call us again, so
+	 * there's no risk of us converting the endianness twice... */
+	make_le32_n(p, 16);
+
+	/* VDQCR "no longer busy" hook - not quite the same as DQRR, because the
+	 * fact "VDQCR" shows busy doesn't mean that the result we're looking at
+	 * is from the same command. Eg. we may be looking at our 10th dequeue
+	 * result from our first VDQCR command, yet the second dequeue command
+	 * could have been kicked off already, after seeing the 1st result. Ie.
+	 * the result we're looking at is not necessarily proof that we can
+	 * reset "busy".  We instead base the decision on whether the current
+	 * result is sitting at the first 'storage' location of the busy
+	 * command. */
+	if (s->vdq.storage == dq) {
+		s->vdq.storage = NULL;
+			atomic_inc(&s->vdq.busy);
+	}
+	return 1;
+}
+
+/********************************/
+/* Categorising dequeue entries */
+/********************************/
+
+static inline int __qbman_dq_entry_is_x(const struct ldpaa_dq *dq, uint32_t x)
+{
+	const uint32_t *p = qb_cl(dq);
+	uint32_t response_verb = qb_attr_code_decode(&code_dqrr_response, p);
+
+	return response_verb == x;
+}
+
+int qbman_dq_entry_is_DQ(const struct ldpaa_dq *dq)
+{
+	return __qbman_dq_entry_is_x(dq, QBMAN_DQRR_RESPONSE_DQ);
+}
+
+/*********************************/
+/* Parsing frame dequeue results */
+/*********************************/
+
+/* These APIs assume qbman_dq_entry_is_DQ() is TRUE */
+
+uint32_t ldpaa_dq_flags(const struct ldpaa_dq *dq)
+{
+	const uint32_t *p = qb_cl(dq);
+
+	return qb_attr_code_decode(&code_dqrr_stat, p);
+}
+
+const struct dpaa_fd *ldpaa_dq_fd(const struct ldpaa_dq *dq)
+{
+	const uint32_t *p = qb_cl(dq);
+
+	return (const struct dpaa_fd *)&p[8];
+}
+
+/******************/
+/* Buffer release */
+/******************/
+
+/* These should be const, eventually */
+/* static struct qb_attr_code code_release_num = QB_CODE(0, 0, 3); */
+static struct qb_attr_code code_release_set_me = QB_CODE(0, 5, 1);
+static struct qb_attr_code code_release_bpid = QB_CODE(0, 16, 16);
+
+void qbman_release_desc_clear(struct qbman_release_desc *d)
+{
+	uint32_t *cl;
+
+	memset(d, 0, sizeof(*d));
+	cl = qb_cl(d);
+	qb_attr_code_encode(&code_release_set_me, cl, 1);
+}
+
+void qbman_release_desc_set_bpid(struct qbman_release_desc *d, uint32_t bpid)
+{
+	uint32_t *cl = qb_cl(d);
+
+	qb_attr_code_encode(&code_release_bpid, cl, bpid);
+}
+
+#define RAR_IDX(rar)     ((rar) & 0x7)
+#define RAR_VB(rar)      ((rar) & 0x80)
+#define RAR_SUCCESS(rar) ((rar) & 0x100)
+
+int qbman_swp_release(struct qbman_swp *s, const struct qbman_release_desc *d,
+		      const uint64_t *buffers, unsigned int num_buffers)
+{
+	uint32_t *p;
+	const uint32_t *cl = qb_cl(d);
+	uint32_t rar = qbman_cinh_read(&s->sys, QBMAN_CINH_SWP_RAR);
+	debug("RAR=%08x\n", rar);
+	if (!RAR_SUCCESS(rar))
+		return -EBUSY;
+	BUG_ON(!num_buffers || (num_buffers > 7));
+	/* Start the release command */
+	p = qbman_cena_write_start(&s->sys,
+				   QBMAN_CENA_SWP_RCR(RAR_IDX(rar)));
+	/* Copy the caller's buffer pointers to the command */
+	u64_to_le32_copy(&p[2], buffers, num_buffers);
+	lwsync();
+	/* Set the verb byte, have to substitute in the valid-bit and the number
+	 * of buffers. */
+	p[0] = cl[0] | RAR_VB(rar) | num_buffers;
+	qbman_cena_write_complete(&s->sys,
+				  QBMAN_CENA_SWP_RCR(RAR_IDX(rar)),
+				  p);
+	return 0;
+}
+
+/*******************/
+/* Buffer acquires */
+/*******************/
+
+/* These should be const, eventually */
+static struct qb_attr_code code_acquire_bpid = QB_CODE(0, 16, 16);
+static struct qb_attr_code code_acquire_num = QB_CODE(1, 0, 3);
+static struct qb_attr_code code_acquire_r_num = QB_CODE(1, 0, 3);
+
+int qbman_swp_acquire(struct qbman_swp *s, uint32_t bpid, uint64_t *buffers,
+		      unsigned int num_buffers)
+{
+	uint32_t *p;
+	uint32_t verb, rslt, num;
+
+	BUG_ON(!num_buffers || (num_buffers > 7));
+
+	/* Start the management command */
+	p = qbman_swp_mc_start(s);
+
+	if (!p)
+		return -EBUSY;
+
+	/* Encode the caller-provided attributes */
+	qb_attr_code_encode(&code_acquire_bpid, p, bpid);
+	qb_attr_code_encode(&code_acquire_num, p, num_buffers);
+
+	/* Complete the management command */
+	p = qbman_swp_mc_complete(s, p, p[0] | QBMAN_MC_ACQUIRE);
+
+	/* Decode the outcome */
+	verb = qb_attr_code_decode(&code_generic_verb, p);
+	rslt = qb_attr_code_decode(&code_generic_rslt, p);
+	num = qb_attr_code_decode(&code_acquire_r_num, p);
+	BUG_ON(verb != QBMAN_MC_ACQUIRE);
+
+	/* Determine success or failure */
+	if (unlikely(rslt != QBMAN_MC_RSLT_OK)) {
+		printf("Acquire buffers from BPID 0x%x failed, code=0x%02x\n",
+		       bpid, rslt);
+		return -EIO;
+	}
+	BUG_ON(num > num_buffers);
+	/* Copy the acquired buffers to the caller's array */
+	u64_from_le32_copy(buffers, &p[2], num);
+	return (int)num;
+}
+
+#ifndef _UAPI_ASM_S390_SIE_H
+#define _UAPI_ASM_S390_SIE_H
+
+#define diagnose_codes						\
+	{ 0x10, "DIAG (0x10) release pages" },			\
+	{ 0x44, "DIAG (0x44) time slice end" },			\
+	{ 0x9c, "DIAG (0x9c) time slice end directed" },	\
+	{ 0x204, "DIAG (0x204) logical-cpu utilization" },	\
+	{ 0x258, "DIAG (0x258) page-reference services" },	\
+	{ 0x288, "DIAG (0x288) watchdog functions" },		\
+	{ 0x308, "DIAG (0x308) ipl functions" },		\
+	{ 0x500, "DIAG (0x500) KVM virtio functions" },		\
+	{ 0x501, "DIAG (0x501) KVM breakpoint" }
+
+#define sigp_order_codes					\
+	{ 0x01, "SIGP sense" },					\
+	{ 0x02, "SIGP external call" },				\
+	{ 0x03, "SIGP emergency signal" },			\
+	{ 0x04, "SIGP start" },					\
+	{ 0x05, "SIGP stop" },					\
+	{ 0x06, "SIGP restart" },				\
+	{ 0x09, "SIGP stop and store status" },			\
+	{ 0x0b, "SIGP initial cpu reset" },			\
+	{ 0x0c, "SIGP cpu reset" },				\
+	{ 0x0d, "SIGP set prefix" },				\
+	{ 0x0e, "SIGP store status at address" },		\
+	{ 0x12, "SIGP set architecture" },			\
+	{ 0x13, "SIGP conditional emergency signal" },		\
+	{ 0x15, "SIGP sense running" },				\
+	{ 0x16, "SIGP set multithreading"},			\
+	{ 0x17, "SIGP store additional status ait address"}
+
+#define icpt_prog_codes						\
+	{ 0x0001, "Prog Operation" },				\
+	{ 0x0002, "Prog Privileged Operation" },		\
+	{ 0x0003, "Prog Execute" },				\
+	{ 0x0004, "Prog Protection" },				\
+	{ 0x0005, "Prog Addressing" },				\
+	{ 0x0006, "Prog Specification" },			\
+	{ 0x0007, "Prog Data" },				\
+	{ 0x0008, "Prog Fixedpoint overflow" },			\
+	{ 0x0009, "Prog Fixedpoint divide" },			\
+	{ 0x000A, "Prog Decimal overflow" },			\
+	{ 0x000B, "Prog Decimal divide" },			\
+	{ 0x000C, "Prog HFP exponent overflow" },		\
+	{ 0x000D, "Prog HFP exponent underflow" },		\
+	{ 0x000E, "Prog HFP significance" },			\
+	{ 0x000F, "Prog HFP divide" },				\
+	{ 0x0010, "Prog Segment translation" },			\
+	{ 0x0011, "Prog Page translation" },			\
+	{ 0x0012, "Prog Translation specification" },		\
+	{ 0x0013, "Prog Special operation" },			\
+	{ 0x0015, "Prog Operand" },				\
+	{ 0x0016, "Prog Trace table" },				\
+	{ 0x0017, "Prog ASNtranslation specification" },	\
+	{ 0x001C, "Prog Spaceswitch event" },			\
+	{ 0x001D, "Prog HFP square root" },			\
+	{ 0x001F, "Prog PCtranslation specification" },		\
+	{ 0x0020, "Prog AFX translation" },			\
+	{ 0x0021, "Prog ASX translation" },			\
+	{ 0x0022, "Prog LX translation" },			\
+	{ 0x0023, "Prog EX translation" },			\
+	{ 0x0024, "Prog Primary authority" },			\
+	{ 0x0025, "Prog Secondary authority" },			\
+	{ 0x0026, "Prog LFXtranslation exception" },		\
+	{ 0x0027, "Prog LSXtranslation exception" },		\
+	{ 0x0028, "Prog ALET specification" },			\
+	{ 0x0029, "Prog ALEN translation" },			\
+	{ 0x002A, "Prog ALE sequence" },			\
+	{ 0x002B, "Prog ASTE validity" },			\
+	{ 0x002C, "Prog ASTE sequence" },			\
+	{ 0x002D, "Prog Extended authority" },			\
+	{ 0x002E, "Prog LSTE sequence" },			\
+	{ 0x002F, "Prog ASTE instance" },			\
+	{ 0x0030, "Prog Stack full" },				\
+	{ 0x0031, "Prog Stack empty" },				\
+	{ 0x0032, "Prog Stack specification" },			\
+	{ 0x0033, "Prog Stack type" },				\
+	{ 0x0034, "Prog Stack operation" },			\
+	{ 0x0039, "Prog Region first translation" },		\
+	{ 0x003A, "Prog Region second translation" },		\
+	{ 0x003B, "Prog Region third translation" },		\
+	{ 0x0040, "Prog Monitor event" },			\
+	{ 0x0080, "Prog PER event" },				\
+	{ 0x0119, "Prog Crypto operation" }
+
+#define exit_code_ipa0(ipa0, opcode, mnemonic)		\
+	{ (ipa0 << 8 | opcode), #ipa0 " " mnemonic }
+#define exit_code(opcode, mnemonic)			\
+	{ opcode, mnemonic }
+
+#define icpt_insn_codes				\
+	exit_code_ipa0(0x01, 0x01, "PR"),	\
+	exit_code_ipa0(0x01, 0x04, "PTFF"),	\
+	exit_code_ipa0(0x01, 0x07, "SCKPF"),	\
+	exit_code_ipa0(0xAA, 0x00, "RINEXT"),	\
+	exit_code_ipa0(0xAA, 0x01, "RION"),	\
+	exit_code_ipa0(0xAA, 0x02, "TRIC"),	\
+	exit_code_ipa0(0xAA, 0x03, "RIOFF"),	\
+	exit_code_ipa0(0xAA, 0x04, "RIEMIT"),	\
+	exit_code_ipa0(0xB2, 0x02, "STIDP"),	\
+	exit_code_ipa0(0xB2, 0x04, "SCK"),	\
+	exit_code_ipa0(0xB2, 0x05, "STCK"),	\
+	exit_code_ipa0(0xB2, 0x06, "SCKC"),	\
+	exit_code_ipa0(0xB2, 0x07, "STCKC"),	\
+	exit_code_ipa0(0xB2, 0x08, "SPT"),	\
+	exit_code_ipa0(0xB2, 0x09, "STPT"),	\
+	exit_code_ipa0(0xB2, 0x0d, "PTLB"),	\
+	exit_code_ipa0(0xB2, 0x10, "SPX"),	\
+	exit_code_ipa0(0xB2, 0x11, "STPX"),	\
+	exit_code_ipa0(0xB2, 0x12, "STAP"),	\
+	exit_code_ipa0(0xB2, 0x14, "SIE"),	\
+	exit_code_ipa0(0xB2, 0x16, "SETR"),	\
+	exit_code_ipa0(0xB2, 0x17, "STETR"),	\
+	exit_code_ipa0(0xB2, 0x18, "PC"),	\
+	exit_code_ipa0(0xB2, 0x20, "SERVC"),	\
+	exit_code_ipa0(0xB2, 0x21, "IPTE"),	\
+	exit_code_ipa0(0xB2, 0x28, "PT"),	\
+	exit_code_ipa0(0xB2, 0x29, "ISKE"),	\
+	exit_code_ipa0(0xB2, 0x2a, "RRBE"),	\
+	exit_code_ipa0(0xB2, 0x2b, "SSKE"),	\
+	exit_code_ipa0(0xB2, 0x2c, "TB"),	\
+	exit_code_ipa0(0xB2, 0x2e, "PGIN"),	\
+	exit_code_ipa0(0xB2, 0x2f, "PGOUT"),	\
+	exit_code_ipa0(0xB2, 0x30, "CSCH"),	\
+	exit_code_ipa0(0xB2, 0x31, "HSCH"),	\
+	exit_code_ipa0(0xB2, 0x32, "MSCH"),	\
+	exit_code_ipa0(0xB2, 0x33, "SSCH"),	\
+	exit_code_ipa0(0xB2, 0x34, "STSCH"),	\
+	exit_code_ipa0(0xB2, 0x35, "TSCH"),	\
+	exit_code_ipa0(0xB2, 0x36, "TPI"),	\
+	exit_code_ipa0(0xB2, 0x37, "SAL"),	\
+	exit_code_ipa0(0xB2, 0x38, "RSCH"),	\
+	exit_code_ipa0(0xB2, 0x39, "STCRW"),	\
+	exit_code_ipa0(0xB2, 0x3a, "STCPS"),	\
+	exit_code_ipa0(0xB2, 0x3b, "RCHP"),	\
+	exit_code_ipa0(0xB2, 0x3c, "SCHM"),	\
+	exit_code_ipa0(0xB2, 0x40, "BAKR"),	\
+	exit_code_ipa0(0xB2, 0x48, "PALB"),	\
+	exit_code_ipa0(0xB2, 0x4c, "TAR"),	\
+	exit_code_ipa0(0xB2, 0x50, "CSP"),	\
+	exit_code_ipa0(0xB2, 0x54, "MVPG"),	\
+	exit_code_ipa0(0xB2, 0x56, "STHYI"),	\
+	exit_code_ipa0(0xB2, 0x58, "BSG"),	\
+	exit_code_ipa0(0xB2, 0x5a, "BSA"),	\
+	exit_code_ipa0(0xB2, 0x5f, "CHSC"),	\
+	exit_code_ipa0(0xB2, 0x74, "SIGA"),	\
+	exit_code_ipa0(0xB2, 0x76, "XSCH"),	\
+	exit_code_ipa0(0xB2, 0x78, "STCKE"),	\
+	exit_code_ipa0(0xB2, 0x7c, "STCKF"),	\
+	exit_code_ipa0(0xB2, 0x7d, "STSI"),	\
+	exit_code_ipa0(0xB2, 0xb0, "STFLE"),	\
+	exit_code_ipa0(0xB2, 0xb1, "STFL"),	\
+	exit_code_ipa0(0xB2, 0xb2, "LPSWE"),	\
+	exit_code_ipa0(0xB2, 0xf8, "TEND"),	\
+	exit_code_ipa0(0xB2, 0xfc, "TABORT"),	\
+	exit_code_ipa0(0xB9, 0x1e, "KMAC"),	\
+	exit_code_ipa0(0xB9, 0x28, "PCKMO"),	\
+	exit_code_ipa0(0xB9, 0x2a, "KMF"),	\
+	exit_code_ipa0(0xB9, 0x2b, "KMO"),	\
+	exit_code_ipa0(0xB9, 0x2d, "KMCTR"),	\
+	exit_code_ipa0(0xB9, 0x2e, "KM"),	\
+	exit_code_ipa0(0xB9, 0x2f, "KMC"),	\
+	exit_code_ipa0(0xB9, 0x3e, "KIMD"),	\
+	exit_code_ipa0(0xB9, 0x3f, "KLMD"),	\
+	exit_code_ipa0(0xB9, 0x8a, "CSPG"),	\
+	exit_code_ipa0(0xB9, 0x8d, "EPSW"),	\
+	exit_code_ipa0(0xB9, 0x8e, "IDTE"),	\
+	exit_code_ipa0(0xB9, 0x8f, "CRDTE"),	\
+	exit_code_ipa0(0xB9, 0x9c, "EQBS"),	\
+	exit_code_ipa0(0xB9, 0xa2, "PTF"),	\
+	exit_code_ipa0(0xB9, 0xab, "ESSA"),	\
+	exit_code_ipa0(0xB9, 0xae, "RRBM"),	\
+	exit_code_ipa0(0xB9, 0xaf, "PFMF"),	\
+	exit_code_ipa0(0xE3, 0x03, "LRAG"),	\
+	exit_code_ipa0(0xE3, 0x13, "LRAY"),	\
+	exit_code_ipa0(0xE3, 0x25, "NTSTG"),	\
+	exit_code_ipa0(0xE5, 0x00, "LASP"),	\
+	exit_code_ipa0(0xE5, 0x01, "TPROT"),	\
+	exit_code_ipa0(0xE5, 0x60, "TBEGIN"),	\
+	exit_code_ipa0(0xE5, 0x61, "TBEGINC"),	\
+	exit_code_ipa0(0xEB, 0x25, "STCTG"),	\
+	exit_code_ipa0(0xEB, 0x2f, "LCTLG"),	\
+	exit_code_ipa0(0xEB, 0x60, "LRIC"),	\
+	exit_code_ipa0(0xEB, 0x61, "STRIC"),	\
+	exit_code_ipa0(0xEB, 0x62, "MRIC"),	\
+	exit_code_ipa0(0xEB, 0x8a, "SQBS"),	\
+	exit_code_ipa0(0xC8, 0x01, "ECTG"),	\
+	exit_code(0x0a, "SVC"),			\
+	exit_code(0x80, "SSM"),			\
+	exit_code(0x82, "LPSW"),		\
+	exit_code(0x83, "DIAG"),		\
+	exit_code(0xae, "SIGP"),		\
+	exit_code(0xac, "STNSM"),		\
+	exit_code(0xad, "STOSM"),		\
+	exit_code(0xb1, "LRA"),			\
+	exit_code(0xb6, "STCTL"),		\
+	exit_code(0xb7, "LCTL"),		\
+	exit_code(0xee, "PLO")
+
+#define sie_intercept_code					\
+	{ 0x00, "Host interruption" },				\
+	{ 0x04, "Instruction" },				\
+	{ 0x08, "Program interruption" },			\
+	{ 0x0c, "Instruction and program interruption" },	\
+	{ 0x10, "External request" },				\
+	{ 0x14, "External interruption" },			\
+	{ 0x18, "I/O request" },				\
+	{ 0x1c, "Wait state" },					\
+	{ 0x20, "Validity" },					\
+	{ 0x28, "Stop request" },				\
+	{ 0x2c, "Operation exception" },			\
+	{ 0x38, "Partial-execution" },				\
+	{ 0x3c, "I/O interruption" },				\
+	{ 0x40, "I/O instruction" },				\
+	{ 0x48, "Timing subset" }
+
+/*
+ * This is the simple interceptable instructions decoder.
+ *
+ * It will be used as userspace interface and it can be used in places
+ * that does not allow to use general decoder functions,
+ * such as trace events declarations.
+ *
+ * Some userspace tools may want to parse this code
+ * and would be confused by switch(), if() and other statements,
+ * but they can understand conditional operator.
+ */
+#define INSN_DECODE_IPA0(ipa0, insn, rshift, mask)		\
+	(insn >> 56) == (ipa0) ?				\
+		((ipa0 << 8) | ((insn >> rshift) & mask)) :
+
+#define INSN_DECODE(insn) (insn >> 56)
+
+/*
+ * The macro icpt_insn_decoder() takes an intercepted instruction
+ * and returns a key, which can be used to find a mnemonic name
+ * of the instruction in the icpt_insn_codes table.
+ */
+#define icpt_insn_decoder(insn) (		\
+	INSN_DECODE_IPA0(0x01, insn, 48, 0xff)	\
+	INSN_DECODE_IPA0(0xaa, insn, 48, 0x0f)	\
+	INSN_DECODE_IPA0(0xb2, insn, 48, 0xff)	\
+	INSN_DECODE_IPA0(0xb9, insn, 48, 0xff)	\
+	INSN_DECODE_IPA0(0xe3, insn, 48, 0xff)	\
+	INSN_DECODE_IPA0(0xe5, insn, 48, 0xff)	\
+	INSN_DECODE_IPA0(0xeb, insn, 16, 0xff)	\
+	INSN_DECODE_IPA0(0xc8, insn, 48, 0x0f)	\
+	INSN_DECODE(insn))
+
+#endif /* _UAPI_ASM_S390_SIE_H */
+
+/* Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/* From dev/ppb_audio_input_dev.idl modified Sat Mar  3 23:06:35 2012. */
+
+#ifndef PPAPI_C_DEV_PPB_AUDIO_INPUT_DEV_H_
+#define PPAPI_C_DEV_PPB_AUDIO_INPUT_DEV_H_
+
+#include "ppapi/c/pp_bool.h"
+#include "ppapi/c/pp_completion_callback.h"
+#include "ppapi/c/pp_instance.h"
+#include "ppapi/c/pp_macros.h"
+#include "ppapi/c/pp_resource.h"
+#include "ppapi/c/pp_stdint.h"
+
+#define PPB_AUDIO_INPUT_DEV_INTERFACE_0_1 "PPB_AudioInput(Dev);0.1"
+#define PPB_AUDIO_INPUT_DEV_INTERFACE_0_2 "PPB_AudioInput(Dev);0.2"
+#define PPB_AUDIO_INPUT_DEV_INTERFACE PPB_AUDIO_INPUT_DEV_INTERFACE_0_2
+
+/**
+ * @file
+ * This file defines the <code>PPB_AudioInput_Dev</code> interface, which
+ * provides realtime audio input capture.
+ */
+
+
+/**
+ * @addtogroup Typedefs
+ * @{
+ */
+/**
+ * <code>PPB_AudioInput_Callback</code> defines the type of an audio callback
+ * function used to provide the audio buffer with data. This callback will be
+ * called on a separate thread from the creation thread.
+ */
+typedef void (*PPB_AudioInput_Callback)(const void* sample_buffer,
+                                        uint32_t buffer_size_in_bytes,
+                                        void* user_data);
+/**
+ * @}
+ */
+
+/**
+ * @addtogroup Interfaces
+ * @{
+ */
+/**
+ * The <code>PPB_AudioInput_Dev</code> interface contains pointers to several
+ * functions for handling audio input resources.
+ */
+struct PPB_AudioInput_Dev_0_2 {
+  /**
+   * Creates an audio input resource.
+   *
+   * @param[in] instance A <code>PP_Instance</code> identifying one instance of
+   * a module.
+   *
+   * @return A <code>PP_Resource</code> corresponding to an audio input resource
+   * if successful, 0 if failed.
+   */
+  PP_Resource (*Create)(PP_Instance instance);
+  /**
+   * Determines if the given resource is an audio input resource.
+   *
+   * @param[in] resource A <code>PP_Resource</code> containing a resource.
+   *
+   * @return A <code>PP_Bool</code> containing <code>PP_TRUE</code> if the given
+   * resource is an audio input resource, otherwise <code>PP_FALSE</code>.
+   */
+  PP_Bool (*IsAudioInput)(PP_Resource resource);
+  /**
+   * Enumerates audio input devices.
+   *
+   * Please note that:
+   * - this method ignores the previous value pointed to by <code>devices</code>
+   *   (won't release reference even if it is not 0);
+   * - <code>devices</code> must be valid until <code>callback</code> is called,
+   *   if the method returns <code>PP_OK_COMPLETIONPENDING</code>;
+   * - the ref count of the returned <code>devices</code> has already been
+   *   increased by 1 for the caller.
+   *
+   * @param[in] audio_input A <code>PP_Resource</code> corresponding to an audio
+   * input resource.
+   * @param[out] devices Once the operation is completed successfully,
+   * <code>devices</code> will be set to a <code>PPB_ResourceArray_Dev</code>
+   * resource, which holds a list of <code>PPB_DeviceRef_Dev</code> resources.
+   * @param[in] callback  A <code>PP_CompletionCallback</code> to run on
+   * completion.
+   *
+   * @return An error code from <code>pp_errors.h</code>.
+   */
+  int32_t (*EnumerateDevices)(PP_Resource audio_input,
+                              PP_Resource* devices,
+                              struct PP_CompletionCallback callback);
+  /**
+   * Opens an audio input device. No sound will be captured until
+   * StartCapture() is called.
+   *
+   * @param[in] audio_input A <code>PP_Resource</code> corresponding to an audio
+   * input resource.
+   * @param[in] device_ref Identifies an audio input device. It could be one of
+   * the resource in the array returned by EnumerateDevices(), or 0 which means
+   * the default device.
+   * @param[in] config A <code>PPB_AudioConfig</code> audio configuration
+   * resource.
+   * @param[in] audio_input_callback A <code>PPB_AudioInput_Callback</code>
+   * function that will be called when data is available.
+   * @param[inout] user_data An opaque pointer that will be passed into
+   * <code>audio_input_callback</code>.
+   * @param[in] callback A <code>PP_CompletionCallback</code> to run when this
+   * open operation is completed.
+   *
+   * @return An error code from <code>pp_errors.h</code>.
+   */
+  int32_t (*Open)(PP_Resource audio_input,
+                  PP_Resource device_ref,
+                  PP_Resource config,
+                  PPB_AudioInput_Callback audio_input_callback,
+                  void* user_data,
+                  struct PP_CompletionCallback callback);
+  /**
+   * Returns an audio config resource for the given audio input resource.
+   *
+   * @param[in] audio_input A <code>PP_Resource</code> corresponding to an audio
+   * input resource.
+   *
+   * @return A <code>PP_Resource</code> containing the audio config resource if
+   * successful.
+   */
+  PP_Resource (*GetCurrentConfig)(PP_Resource audio_input);
+  /**
+   * Starts the capture of the audio input resource and begins periodically
+   * calling the callback.
+   *
+   * @param[in] audio_input A <code>PP_Resource</code> corresponding to an audio
+   * input resource.
+   *
+   * @return A <code>PP_Bool</code> containing <code>PP_TRUE</code> if
+   * successful, otherwise <code>PP_FALSE</code>.
+   * Also returns <code>PP_TRUE</code> (and is a no-op) if called while capture
+   * is already started.
+   */
+  PP_Bool (*StartCapture)(PP_Resource audio_input);
+  /**
+   * Stops the capture of the audio input resource.
+   *
+   * @param[in] audio_input A PP_Resource containing the audio input resource.
+   *
+   * @return A <code>PP_Bool</code> containing <code>PP_TRUE</code> if
+   * successful, otherwise <code>PP_FALSE</code>.
+   * Also returns <code>PP_TRUE</code> (and is a no-op) if called while capture
+   * is already stopped. If a buffer is being captured, StopCapture will block
+   * until the call completes.
+   */
+  PP_Bool (*StopCapture)(PP_Resource audio_input);
+  /**
+   * Closes the audio input device, and stops capturing if necessary. It is
+   * not valid to call Open() again after a call to this method.
+   * If an audio input resource is destroyed while a device is still open, then
+   * it will be implicitly closed, so you are not required to call this method.
+   *
+   * @param[in] audio_input A <code>PP_Resource</code> corresponding to an audio
+   * input resource.
+   */
+  void (*Close)(PP_Resource audio_input);
+};
+
+typedef struct PPB_AudioInput_Dev_0_2 PPB_AudioInput_Dev;
+
+struct PPB_AudioInput_Dev_0_1 {
+  PP_Resource (*Create)(PP_Instance instance,
+                        PP_Resource config,
+                        PPB_AudioInput_Callback audio_input_callback,
+                        void* user_data);
+  PP_Bool (*IsAudioInput)(PP_Resource resource);
+  PP_Resource (*GetCurrentConfig)(PP_Resource audio_input);
+  PP_Bool (*StartCapture)(PP_Resource audio_input);
+  PP_Bool (*StopCapture)(PP_Resource audio_input);
+};
+/**
+ * @}
+ */
+
+#endif  /* PPAPI_C_DEV_PPB_AUDIO_INPUT_DEV_H_ */
+
+
